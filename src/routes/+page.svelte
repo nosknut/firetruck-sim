@@ -1,86 +1,48 @@
 <script lang="ts">
 	import * as THREE from 'three';
 	import * as SC from 'svelte-cubed';
-
-	let drive = 0;
-
-	let width = 2.5;
-	let height = 3.8;
-	let length = 10;
-
-	let roadTexture = new THREE.TextureLoader().load('src/lib/images/street.jpg');
-	roadTexture.wrapS = THREE.RepeatWrapping;
-	roadTexture.wrapT = THREE.RepeatWrapping;
-	roadTexture.repeat.set(1, 1);
-	roadTexture.rotation = Math.PI / 2;
-
-	let roadMaterial = new THREE.MeshBasicMaterial({
-		map: roadTexture
-	});
+	import Road from './Road.svelte';
+	import Firetruck from './Firetruck.svelte';
+	import DrivableFireTruck from './DrivableFiretruck.svelte';
+	import Joystick from './Joystick.svelte';
+	let speed = 0;
+	let turn = 0;
+	/*
+	function stop() {
+		speed = 0;
+		turn = 0;
+	}
+	*/
 </script>
 
 <SC.Canvas>
-	<SC.Group position={[2.5, 0, 1 + drive]}>
-		<SC.Mesh
-			material={new THREE.MeshBasicMaterial({ color: 'red' })}
-			position={[0, height / 2 + 0.5, 0]}
-			geometry={new THREE.BoxGeometry(width, height, length)}
-		/>
-		<SC.Mesh
-			material={new THREE.MeshBasicMaterial({ color: 'black' })}
-			position={[width / 2, 0.5, length / 2 - 1.5]}
-			geometry={new THREE.BoxGeometry(0.5, 1, 1)}
-		/>
-		<SC.Mesh
-			material={new THREE.MeshBasicMaterial({ color: 'black' })}
-			position={[-width / 2, 0.5, length / 2 - 1.5]}
-			geometry={new THREE.BoxGeometry(0.5, 1, 1)}
-		/>
-		<SC.Mesh
-			material={new THREE.MeshBasicMaterial({ color: 'black' })}
-			position={[-width / 2, 0.5, -length / 2 + 1.5]}
-			geometry={new THREE.BoxGeometry(0.5, 1, 1)}
-		/>
-		<SC.Mesh
-			material={new THREE.MeshBasicMaterial({ color: 'black' })}
-			position={[width / 2, 0.5, -length / 2 + 1.5]}
-			geometry={new THREE.BoxGeometry(0.5, 1, 1)}
-		/>
-		<SC.Mesh
-			material={new THREE.MeshBasicMaterial({ color: 'rgb(150, 150, 150)' })}
-			position={[0, height + 1, 1]}
-			geometry={new THREE.BoxGeometry(1, 1, 12)}
-		/>
-		<SC.Mesh
-			material={new THREE.MeshBasicMaterial({ color: 'rgb(70, 70, 70)' })}
-			position={[0, height + 1, length / 2 + 3]}
-			geometry={new THREE.BoxGeometry(2, 2, 2)}
-		/>
-		<SC.Mesh
-			material={new THREE.MeshBasicMaterial({ color: 'rgb(30, 30, 30)' })}
-			position={[0, height / 2 + 1, length / 2 - 0.75]}
-			geometry={new THREE.BoxGeometry(3, height - 2, 2)}
-		/>
-	</SC.Group>
-	<SC.Mesh
-		material={roadMaterial}
-		position={[0, 0, 0]}
-		geometry={new THREE.PlaneGeometry(10, 20)}
-		rotation={[-Math.PI / 2, 0, 0]}
-	/>
+	<Road />
+	<DrivableFireTruck {speed} turn={turn * 30} />
 	<SC.PerspectiveCamera zoom={0.5} position={[-10, 10, 10]} />
 	<SC.OrbitControls />
 </SC.Canvas>
 
 <div class="controls">
+	<!--
 	Controls
 	<br />
 	<br />
 	<label>
-		Drive:
-		<input type="range" bind:value={drive} min="-3" max="3" step="0.1" />
-		{drive}
+		Speed:
+		<input type="range" bind:value={speed} min="-0.5" max="0.5" step="0.01" />
+		{speed}
 	</label>
+	
+	<label>
+		Turn:
+		<input type="range" bind:value={turn} min="-30" max="30" step="0.1" />
+		{turn}
+	</label>
+	
+	<button class="stop-button" on:click={stop}> Stop </button>
+-->
+
+	<Joystick bind:x={turn} bind:y={speed} />
 </div>
 
 <style>
@@ -90,8 +52,20 @@
 		background-color: rgb(39, 39, 39);
 		padding: 10px;
 	}
+	/*
 	.controls label {
 		display: flex;
 		align-items: center;
 	}
+	.controls button {
+		margin-top: 10px;
+	}
+	.stop-button {
+		border-radius: 50%;
+		background-color: red;
+		height: 50px;
+		width: 50px;
+		color: white;
+	}
+	*/
 </style>
