@@ -6,7 +6,7 @@
 	let roadTexture = new THREE.TextureLoader().load(image);
 	roadTexture.wrapS = THREE.RepeatWrapping;
 	roadTexture.wrapT = THREE.RepeatWrapping;
-	roadTexture.repeat.set(1, 1);
+	roadTexture.repeat.set(1, 2);
 	roadTexture.rotation = Math.PI / 2;
 
 	let roadMaterial = new THREE.MeshBasicMaterial({
@@ -17,6 +17,6 @@
 <SC.Mesh
 	material={roadMaterial}
 	position={[0, 0, 0]}
-	geometry={new THREE.PlaneGeometry(10, 20)}
+	geometry={new THREE.PlaneGeometry(20, 40)}
 	rotation={[-Math.PI / 2, 0, 0]}
 />

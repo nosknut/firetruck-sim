@@ -13,7 +13,7 @@
 	let truckStates = [createVehicleState(), createVehicleState(), createVehicleState()];
 
 	truckStates.forEach((state, i) => {
-		state.state.transform.position.x = i * 5;
+		state.state.transform.position.x = i * 5 - 5;
 	});
 </script>
 
