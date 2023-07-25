@@ -90,6 +90,7 @@
 	}
 	.joystick-area {
 		position: relative;
+		border-radius: 5px;
 	}
 
 	.joystick.round .joystick-area {
