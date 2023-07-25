@@ -1,8 +1,9 @@
 <script lang="ts">
 	import * as THREE from 'three';
 	import * as SC from 'svelte-cubed';
+	import image from '$lib/images/street.jpg';
 
-	let roadTexture = new THREE.TextureLoader().load('src/lib/images/street.jpg');
+	let roadTexture = new THREE.TextureLoader().load(image);
 	roadTexture.wrapS = THREE.RepeatWrapping;
 	roadTexture.wrapT = THREE.RepeatWrapping;
 	roadTexture.repeat.set(1, 1);
