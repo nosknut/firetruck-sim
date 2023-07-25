@@ -2,21 +2,13 @@
 	import * as THREE from 'three';
 	import * as SC from 'svelte-cubed';
 	import Tire from './Tire.svelte';
-	import Road from './Road.svelte';
+	import type { VehicleState } from '$lib/types/VehicleState';
+	import { createVehicleState } from '$lib/helpers/createVehicleState';
 
-	export let position = {
-		x: 0,
-		y: 0,
-		z: 0
-	};
+	export let state: VehicleState = createVehicleState();
 
-	export let rotation = {
-		x: 0,
-		y: 0,
-		z: 0
-	};
-
-	export let turn = 0;
+	$: position = state.transform.position;
+	$: rotation = state.transform.rotation;
 
 	let width = 2.5;
 	let height = 3.8;
@@ -24,7 +16,7 @@
 
 	$: frontTireRotation = {
 		x: 0,
-		y: (-turn * Math.PI) / 180,
+		y: (-state.turn * Math.PI) / 180,
 		z: 0
 	};
 
