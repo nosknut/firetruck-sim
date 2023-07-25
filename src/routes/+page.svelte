@@ -14,7 +14,11 @@
 
 	truckStates.forEach((state, i) => {
 		state.state.transform.position.x = i * 5 - 5;
+		state.state.transform.position.z = i * 7 - 5;
 	});
+
+	truckStates[0].state.transform.rotation.y = Math.PI;
+
 </script>
 
 <SC.Canvas>
