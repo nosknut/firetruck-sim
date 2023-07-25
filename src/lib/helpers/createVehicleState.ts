@@ -8,8 +8,14 @@ export function createVehicleState() {
         transform: {
             position: new Vector3(0, 0, 0),
             rotation: new Vector3(0, 0, 0)
-        }
+        },
     };
 
-    return state;
+    return {
+        state,
+        stop() {
+            state.speed = 0;
+            state.turn = 0;
+        },
+    };
 }

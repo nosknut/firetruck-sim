@@ -10,27 +10,30 @@
 	import { createVehicleState } from '$lib/helpers/createVehicleState';
 	import VehiclePhysics from '$lib/components/VehiclePhysics.svelte';
 
-	let truckState = createVehicleState();
+	let truckStates = [createVehicleState(), createVehicleState(), createVehicleState()];
 
-	function stop() {
-		truckState.turn = 0;
-		truckState.speed = 0;
-	}
+	truckStates.forEach((state, i) => {
+		state.state.transform.position.x = i * 5;
+	});
 </script>
 
 <SC.Canvas>
 	<Road />
-	<VehiclePhysics profile={{ maxSpeed: 1, maxTurnAngle: 30 }} bind:state={truckState} />
-	<Firetruck bind:state={truckState} />
+	{#each truckStates as { state }}
+		<VehiclePhysics profile={{ maxSpeed: 1, maxTurnAngle: 30 }} bind:state />
+		<Firetruck bind:state />
+	{/each}
 	<SC.PerspectiveCamera zoom={0.5} position={[-10, 10, 10]} />
 	<SC.OrbitControls />
 </SC.Canvas>
 
 <ControlsPanel>
-	<Controls label="Firetruck Controls">
-		<Slider bind:value={truckState.speed} min={-1} max={1} label="Speed" />
-		<Slider bind:value={truckState.turn} min={-1} max={1} label="Turn" />
-		<StopButton on:click={stop} />
-		<Joystick bind:x={truckState.turn} bind:y={truckState.speed} />
-	</Controls>
+	{#each truckStates as { state, stop }, i}
+		<Controls label="Firetruck {i + 1} Controls">
+			<Slider bind:value={state.speed} min={-1} max={1} label="Speed" />
+			<Slider bind:value={state.turn} min={-1} max={1} label="Turn" />
+			<StopButton on:click={stop} />
+			<Joystick bind:x={state.turn} bind:y={state.speed} />
+		</Controls>
+	{/each}
 </ControlsPanel>

@@ -11,5 +11,7 @@
         flex-direction: column;
         gap: 10px;
         color: white;
+        max-height: 90vh;
+        overflow-y: auto;
 	}
 </style>
