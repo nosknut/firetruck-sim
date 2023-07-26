@@ -9,6 +9,7 @@
 	import StopButton from '$lib/components/StopButton.svelte';
 	import { createVehicleState } from '$lib/helpers/createVehicleState';
 	import VehiclePhysics from '$lib/components/VehiclePhysics.svelte';
+	import Serial from '$lib/components/Serial.svelte';
 
 	let truckStates = [createVehicleState(), createVehicleState(), createVehicleState()];
 
@@ -32,6 +33,9 @@
 </SC.Canvas>
 
 <ControlsPanel>
+	<Controls label="Serial Port">
+		<Serial />
+	</Controls>
 	{#each truckStates as { state, stop }, i}
 		<Controls label="Firetruck {i + 1} Controls">
 			<Slider bind:value={state.speed} min={-1} max={1} label="Speed" />
