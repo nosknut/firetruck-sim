@@ -1,5 +1,7 @@
 <script>
-    import "../app.css";
-  </script>
-  
-  <slot />
+	import "../app.css";
+	import { DarkMode } from 'flowbite-svelte';
+</script>
+
+<DarkMode />
+<slot />
