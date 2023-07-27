@@ -2,6 +2,8 @@ import { JsonParser } from '$lib/helpers/JsonParser';
 import { writable } from "svelte/store";
 
 function createSerialPort() {
+    const store = writable({ isOpen: false });
+
     const encoder = new TextEncoder();
 
     let port: SerialPort | null = null;
@@ -23,6 +25,7 @@ function createSerialPort() {
     }
 
     return {
+        subscribe: store.subscribe,
         async open(options: SerialOptions) {
             port = await navigator.serial.requestPort();
             await port.open(options);
@@ -41,6 +44,8 @@ function createSerialPort() {
                         });
                     }
                 }))
+
+            store.update(val => ({ ...val, isOpen: true }))
         },
         async close() {
             port?.readable.cancel("User closed port")
@@ -52,6 +57,8 @@ function createSerialPort() {
             while (callbacks.length > 0) {
                 callbacks.pop();
             }
+
+            store.update(val => ({ ...val, isOpen: false }))
         },
         async send(data: any) {
             await write(JSON.stringify(data));

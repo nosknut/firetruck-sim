@@ -10,6 +10,8 @@
 	import { createVehicleState } from '$lib/helpers/createVehicleState';
 	import VehiclePhysics from '$lib/components/VehiclePhysics.svelte';
 	import Serial from '$lib/components/Serial.svelte';
+	import { pins } from '$lib/stores/pins';
+	import { serialPort } from '$lib/stores/serial';
 
 	let truckStates = [createVehicleState(), createVehicleState(), createVehicleState()];
 
@@ -19,7 +21,10 @@
 	});
 
 	truckStates[0].state.transform.rotation.y = Math.PI;
-
+	
+	$: if ($serialPort.isOpen) {
+		truckStates[0].state.speed = $pins[6] === 255 ? 1 : 0;
+	}
 </script>
 
 <SC.Canvas>

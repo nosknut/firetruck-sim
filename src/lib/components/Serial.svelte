@@ -4,7 +4,6 @@
 	import { onDestroy } from 'svelte';
 
 	let monitorBox: HTMLTextAreaElement;
-	let connected = false;
 	let autoscroll = true;
 	let monitor = '';
 
@@ -33,17 +32,14 @@
 				console.log('Serial: ', data.print);
 			}
 		});
-
-		connected = true;
 	}
 
 	onDestroy(() => {
 		serialPort.close();
-		connected = false;
 	});
 </script>
 
-{#if !connected}
+{#if !$serialPort.isOpen}
 	<button class="connect-button connect" on:click={open}>Connect</button>
 {:else}
 	<button class="connect-button disconnect" on:click={serialPort.close}>Disconnect</button>
