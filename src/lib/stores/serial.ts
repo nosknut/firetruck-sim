@@ -9,6 +9,19 @@ function createSerialPort() {
 
     const callbacks: ((data: any) => void)[] = [];
 
+    async function write(data: string) {
+        if (port) {
+            const writer = port.writable.getWriter();
+            try {
+                await writer.write(encoder.encode(data));
+            } finally {
+                writer.releaseLock();
+            }
+        } else {
+            throw new Error("No open connection");
+        }
+    }
+
     return {
         async open(options: SerialOptions) {
             port = await navigator.serial.requestPort();
@@ -40,18 +53,10 @@ function createSerialPort() {
                 callbacks.pop();
             }
         },
-        async write(data: string) {
-            if (port) {
-                const writer = port.writable.getWriter();
-                try {
-                    await writer.write(encoder.encode(data));
-                } finally {
-                    writer.releaseLock();
-                }
-            } else {
-                throw new Error("No open connection");
-            }
+        async send(data: any) {
+            await write(JSON.stringify(data));
         },
+        write,
         async onReceive(callback: (data: any) => void) {
             callbacks.push(callback);
         }
