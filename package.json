@@ -41,7 +41,11 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@floating-ui/dom": "^1.4.5",
+		"flowbite": "^1.7.0",
+		"flowbite-svelte": "^0.40.2",
 		"svelte-cubed": "^0.2.1",
+		"tailwind-merge": "^1.14.0",
 		"three": "^0.154.0"
 	}
 }
