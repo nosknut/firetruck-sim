@@ -8,18 +8,21 @@ void setup()
     Serial.begin(115200);
 }
 
+int i = 0;
 void loop()
 {
-    int value = analogRead(3);
-    analogWrite(5, value);
-
-    if (millis() - timer > 1000)
+    /*
+    for (int x = 0; x < 255; x++)
     {
-        timer = millis();
-        Serial.println("Hello, world!");
-        analogWrite(6, state ? 255 : 0);
-        state = !state;
+        digitalWrite(6, x);
+        delay(10);
     }
-
-    delay(100);
+    for (int x = 255; x > 0; x--)
+    {
+        digitalWrite(6, x);
+        delay(10);
+    }
+    */
+    delay(1000);
+    Serial.print("Hello World!" + String(i++));
 }

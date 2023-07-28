@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { JsonParser } from '$lib/helpers/JsonParser';
+import { createPinMessage, createPrintMessage, MicroParser } from '$lib/helpers/MicroParser';
 import { writable } from "svelte/store";
 
 function createSerialPort() {
@@ -12,6 +13,9 @@ function createSerialPort() {
     });
 
     const encoder = new TextEncoder();
+
+    // eslint-disable-next-line prefer-const
+    let messageFormat: 'json' | 'micro' = 'micro';
 
     let port: SerialPort | null = null;
     let webSocket: WebSocket | null = null;
@@ -44,7 +48,7 @@ function createSerialPort() {
             port = await navigator.serial.requestPort();
             await port.open(options);
 
-            const parser = JsonParser();
+            const parser = messageFormat == 'json' ? JsonParser() : MicroParser();
 
             port.readable
                 .pipeThrough(new TextDecoderStream())
@@ -104,7 +108,16 @@ function createSerialPort() {
             store.set({ isOpen: false, connectionType: null })
         },
         async send(data: any) {
-            await write(JSON.stringify(data));
+            if (messageFormat === 'json') {
+                await write(JSON.stringify(data));
+            }
+            if (messageFormat === 'micro') {
+                if ('pin' in data) {
+                    await write(createPinMessage(data.pin, data.value));
+                } else if ('print' in data) {
+                    await write(createPrintMessage(data.print));
+                }
+            }
         },
         write,
         async onReceive(callback: (data: any) => void) {
