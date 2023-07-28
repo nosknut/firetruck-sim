@@ -1,0 +1,6 @@
+[wokwi]
+version = 1
+firmware = "../.arduino/output/arduino.ino.hex"
+elf = "../.arduino/output/arduino.ino.elf"
+rfc2217ServerPort = 4000
+webSocketServerPort = 4001

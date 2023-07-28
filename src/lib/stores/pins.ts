@@ -1,4 +1,5 @@
 import { writable } from "svelte/store"
+
 import { serialPort } from "./serial"
 
 function createPins() {
@@ -30,10 +31,11 @@ function createPins() {
 
     function syncPin(pin: number | string, value: number | boolean) {
         update((pins) => {
-            pins[pin] = value
+            pins[pin] = Number(value)
             return pins
         })
     }
+
     return {
         subscribe,
         syncPin,
@@ -48,3 +50,9 @@ function createPins() {
 }
 
 export const pins = createPins()
+
+serialPort.onReceive((data: { pin: number; value: number } | { print: string }) => {
+    if ('pin' in data) {
+        pins.syncPin(data.pin, data.value);
+    }
+}).catch(console.error);

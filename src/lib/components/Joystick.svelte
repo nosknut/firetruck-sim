@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Label } from "flowbite-svelte";
+
 	export let size = 100;
 	export let round = false;
 
@@ -67,21 +69,24 @@
 <svelte:body on:mouseup={() => (clicked = false)} on:mousemove={onDrag} />
 
 <div class="joystick" class:round style="background-color: {colors.background};">
-	<div
-		class="joystick-area"
-		style="width: {size}px; height: {size}px; background-color: {colors.area};"
-		bind:clientWidth={joystickSize.width}
-		bind:clientHeight={joystickSize.height}
-		bind:this={areaHandle}
-	>
-		<button
-			class="joystick-handle"
-			on:mousedown={() => (clicked = true)}
-			style="width: {size / 2}px; height: {size / 2}px; top: {-yPos +
-				joystickHalfSize.height}px; left: {xPos +
-				joystickHalfSize.width}px; transform: translate(-50%, -50%); background-color: {colors.handle};"
-		/>
-	</div>
+	<Label class="text-center">
+		Joystick
+		<div
+			class="joystick-area"
+			style="width: {size}px; height: {size}px; background-color: {colors.area};"
+			bind:clientWidth={joystickSize.width}
+			bind:clientHeight={joystickSize.height}
+			bind:this={areaHandle}
+		>
+			<button
+				class="joystick-handle"
+				on:mousedown={() => (clicked = true)}
+				style="width: {size / 2}px; height: {size / 2}px; top: {-yPos +
+					joystickHalfSize.height}px; left: {xPos +
+					joystickHalfSize.width}px; transform: translate(-50%, -50%); background-color: {colors.handle};"
+			/>
+		</div>
+	</Label>
 </div>
 
 <style>

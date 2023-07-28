@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Label } from "flowbite-svelte";
+
 	export let value = 0;
 	export let min = 0;
 	export let max = 1;
@@ -8,15 +10,7 @@
 	export let unit = '';
 </script>
 
-<label class="slider">
-	{label}:
-	<input type="range" bind:value {min} {max} {step} />
-	{value.toFixed(numDigits)}{unit}
-</label>
-
-<style>
-	.slider {
-		display: flex;
-		align-items: center;
-	}
-</style>
+<Label>
+	{label}: {value.toFixed(numDigits)}{unit}
+	<input class="w-full" type="range" bind:value {min} {max} {step} />
+</Label>

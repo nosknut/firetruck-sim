@@ -1,15 +1,23 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { JsonParser } from '$lib/helpers/JsonParser';
 import { writable } from "svelte/store";
 
 function createSerialPort() {
-    const store = writable({ isOpen: false });
+    const store = writable<{
+        isOpen: boolean;
+        connectionType: "serial" | "websocket" | null;
+    }>({
+        isOpen: false,
+        connectionType: null,
+    });
 
     const encoder = new TextEncoder();
 
     let port: SerialPort | null = null;
-    const portStore = writable<SerialPort | null>(null);
+    let webSocket: WebSocket | null = null;
 
-    const callbacks: ((data: any) => void)[] = [];
+    const portCallbacks: ((data: any) => void)[] = [];
+    const webSocketCallbacks: ((data: any) => void)[] = [];
 
     async function write(data: string) {
         if (port) {
@@ -19,6 +27,8 @@ function createSerialPort() {
             } finally {
                 writer.releaseLock();
             }
+        } else if (webSocket) {
+            webSocket.send(data);
         } else {
             throw new Error("No open connection");
         }
@@ -26,10 +36,13 @@ function createSerialPort() {
 
     return {
         subscribe: store.subscribe,
-        async open(options: SerialOptions) {
+        async openSerialPort(options: SerialOptions) {
+            if (port || webSocket) {
+                throw new Error("Port already open");
+            }
+
             port = await navigator.serial.requestPort();
             await port.open(options);
-            portStore.set(port)
 
             const parser = JsonParser();
 
@@ -38,34 +51,65 @@ function createSerialPort() {
                 .pipeTo(new WritableStream({
                     write(chunk) {
                         parser.parse(chunk).forEach((data) => {
-                            callbacks.forEach((callback) => {
+                            portCallbacks.forEach((callback) => {
                                 callback(data);
                             });
                         });
                     }
                 }))
 
-            store.update(val => ({ ...val, isOpen: true }))
+            store.set({ isOpen: true, connectionType: "serial" })
+        },
+        async openWebSocket(url: string) {
+            if (port || webSocket) {
+                throw new Error("Port already open");
+            }
+
+            await new Promise<void>((resolve, reject) => {
+                const ws = new WebSocket(url);
+
+                ws.onerror = (event) => {
+                    reject(event);
+                }
+
+                ws.onopen = () => {
+                    const parser = JsonParser();
+
+                    ws.onmessage = (event) => {
+                        parser.parse(event.data).forEach((data) => {
+                            webSocketCallbacks.forEach((callback) => {
+                                callback(data);
+                            });
+                        });
+                    };
+
+                    webSocket = ws;
+                    store.set({ isOpen: true, connectionType: "websocket" })
+
+                    resolve();
+                }
+            });
         },
         async close() {
             port?.readable.cancel("User closed port")
-            await port?.close()
+            await port?.close().catch(() => {
+                // TODO: Find out how to close the serial port without reloading the page
+                window.location.reload();
+            });
+            await webSocket?.close()
 
-            portStore.set(null)
             port = null
+            webSocket = null
 
-            while (callbacks.length > 0) {
-                callbacks.pop();
-            }
-
-            store.update(val => ({ ...val, isOpen: false }))
+            store.set({ isOpen: false, connectionType: null })
         },
         async send(data: any) {
             await write(JSON.stringify(data));
         },
         write,
         async onReceive(callback: (data: any) => void) {
-            callbacks.push(callback);
+            portCallbacks.push(callback);
+            webSocketCallbacks.push(callback);
         }
     }
 }
