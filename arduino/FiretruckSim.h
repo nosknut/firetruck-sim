@@ -17,10 +17,10 @@ void syncPinsWithSim()
             return;
         }
 
-        if (jsonDoc.containsKey("pin"))
+        if (jsonDoc.containsKey("p"))
         {
-            int pin = jsonDoc["pin"].as<int>();
-            int value = jsonDoc["value"].as<int>();
+            int pin = jsonDoc["p"].as<int>();
+            int value = jsonDoc["v"].as<int>();
             pinValues[pin] = value;
         }
     }
@@ -51,8 +51,8 @@ void analogWriteSim(uint8_t pin, int val)
 
     DynamicJsonDocument jsonDoc(500);
 
-    jsonDoc["pin"] = pin;
-    jsonDoc["value"] = val;
+    jsonDoc["p"] = pin;
+    jsonDoc["v"] = val;
 
     serializeJson(jsonDoc, Serial);
     syncPinsWithSim();

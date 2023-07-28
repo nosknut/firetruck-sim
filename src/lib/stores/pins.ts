@@ -51,8 +51,8 @@ function createPins() {
 
 export const pins = createPins()
 
-serialPort.onReceive((data: { pin: number; value: number } | { print: string }) => {
-    if ('pin' in data) {
-        pins.syncPin(data.pin, data.value);
+serialPort.onReceive((data: { p: number; v: number } | { print: string }) => {
+    if ('p' in data) {
+        pins.syncPin(data.p, data.v);
     }
 }).catch(console.error);
