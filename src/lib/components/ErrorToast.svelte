@@ -18,7 +18,7 @@
 </script>
 
 <Toast
-	class="fixed bottom-10 right-10 bg-red-950 dark:bg-red-950 text-white dark:text-white"
+	class="fixed z-10 bottom-10 right-10 bg-red-950 dark:bg-red-950 text-white dark:text-white"
 	bind:open
 	transition={fly}
 	params={{ x: 200 }}
