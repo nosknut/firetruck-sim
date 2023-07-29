@@ -4,7 +4,7 @@
 	import * as SC from 'svelte-cubed';
 	import { createVehicleState } from '$lib/helpers/createVehicleState';
 	import VehiclePhysics from '$lib/components/VehiclePhysics.svelte';
-	import { pins } from '$lib/stores/pins';
+	import { pins, simPins } from '$lib/stores/pins';
 	import { serialPort } from '$lib/stores/serial';
 	import PageLayout from '$lib/components/PageLayout.svelte';
 	import SerialConnectButton from '$lib/components/SerialConnectButton.svelte';
@@ -16,7 +16,30 @@
 	import Slider from '$lib/components/Slider.svelte';
 	import StopButton from '$lib/components/StopButton.svelte';
 	import FixCanvas from '$lib/components/FixCanvas.svelte';
-	import { Label } from 'flowbite-svelte';
+	import { onDestroy } from 'svelte';
+	import NumberToggle from '$lib/components/NumberToggle.svelte';
+	import { writable } from 'svelte/store';
+
+	const GAS_PEDAL_PIN = 1;
+	const DIRECTION_PIN = 2;
+	const SPEED_SENSOR_PIN = 3;
+	const DIRECTION_INDICATOR_PIN = 4;
+	const MOTOR_POWER_PIN = 5;
+	const SPEEDOMETER_PIN = 6;
+
+	// Used because the truck speed is technically a cyclical dependency
+	const truckSpeed = writable(0);
+
+	let joyStickY = 0;
+
+	// Only update direction if the joystick is being used
+	$: {
+		$pins[GAS_PEDAL_PIN] = Math.round(Math.abs(joyStickY) * 255);
+		$pins[DIRECTION_PIN] = Number(joyStickY >= 0);
+	}
+
+	// Start with direction forward
+	$pins[DIRECTION_PIN] = 1;
 
 	let truckStates = [createVehicleState(), createVehicleState(), createVehicleState()];
 
@@ -25,10 +48,31 @@
 		state.state.transform.position.z = i * 7 - 5;
 	});
 
-	truckStates[0].state.transform.rotation.y = Math.PI;
+	let truck = truckStates[0];
+	truck.state.transform.rotation.y = Math.PI;
+	$: truck.state.speed = $truckSpeed;
 
-	$: if ($serialPort.isOpen) {
-		truckStates[0].state.speed = $pins[6] === 255 ? 1 : 0;
+	$: directionIndicator =
+		$pins[DIRECTION_INDICATOR_PIN] === undefined
+			? 'N/A'
+			: $pins[DIRECTION_INDICATOR_PIN]
+			? 'Forward'
+			: 'Backward';
+
+	$simPins.add(SPEED_SENSOR_PIN.toString());
+	onDestroy(() => $simPins.delete(SPEED_SENSOR_PIN.toString()));
+	$: $pins[SPEED_SENSOR_PIN] = Math.round(Math.abs($truckSpeed) * 255);
+
+	onDestroy(
+		// In a subscription because this is a cyclical dependency
+		pins.subscribe((pins) => {
+			let direction = pins[DIRECTION_PIN] ? 1 : -1;
+			truckSpeed.set((direction * ($pins[MOTOR_POWER_PIN] || 0)) / 255);
+		})
+	);
+
+	function stopTruck() {
+		$pins[GAS_PEDAL_PIN] = 0;
 	}
 </script>
 
@@ -41,22 +85,55 @@
 		<div class="w-96">
 			<ControlsPanel>
 				{#if $serialPort.isOpen}
-				<Controls open label="Serial Monitor">
-					<SerialMonitor />
-				</Controls>
-				<Controls open label="Pin Registry" topPadding={6}>
-					<PinRegistry />
-				</Controls>
-				{/if}
-				{#each truckStates as { state, stop }, i}
-					<Controls label="Firetruck {i + 1} Controls">
-						<Slider bind:value={state.speed} min={-1} max={1} label="Speed" />
-						<Slider bind:value={state.turn} min={-1} max={1} label="Turn" />
+					<Controls open label="Serial Monitor">
+						<SerialMonitor />
+					</Controls>
+					<Controls open label="Firetruck 1 Serial Controls">
+						<NumberToggle bind:checked={$pins[DIRECTION_PIN]} label="Direction" />
+						<div class="text-center">
+							<div>
+								Direction: {directionIndicator}
+							</div>
+							<div>
+								Speedometer: {$pins[SPEEDOMETER_PIN] ?? 'N/A'}
+							</div>
+							<div>
+								Power: {$pins[MOTOR_POWER_PIN] ?? 'N/A'}
+							</div>
+						</div>
+						<Slider
+							bind:value={$pins[GAS_PEDAL_PIN]}
+							min={0}
+							max={255}
+							step={1}
+							numDigits={0}
+							label="Gas Pedal"
+						/>
+						<Slider bind:value={truck.state.turn} min={-1} max={1} label="Turn" />
 						<div style="align-items: center;" class="flex justify-between">
-							<Joystick bind:x={state.turn} bind:y={state.speed} />
-							<StopButton on:click={stop} />
+							<Joystick bind:x={truck.state.turn} bind:y={joyStickY} />
+							<StopButton on:click={stopTruck} />
 						</div>
 					</Controls>
+					<Controls open label="Pin Registry" topPadding={6}>
+						<PinRegistry />
+					</Controls>
+				{:else}
+					<Controls label="Firetruck 1 Controls">
+						Connect to a controller to use this truck.
+					</Controls>
+				{/if}
+				{#each truckStates as { state, stop }, i}
+					{#if i > 0}
+						<Controls label="Firetruck {i + 1} Controls">
+							<Slider bind:value={state.speed} min={-1} max={1} label="Speed" />
+							<Slider bind:value={state.turn} min={-1} max={1} label="Turn" />
+							<div style="align-items: center;" class="flex justify-between">
+								<Joystick bind:x={state.turn} bind:y={state.speed} />
+								<StopButton on:click={stop} />
+							</div>
+						</Controls>
+					{/if}
 				{/each}
 			</ControlsPanel>
 		</div>

@@ -63,10 +63,25 @@ void digitalWriteSim(uint8_t pin, uint8_t val)
     analogWriteSim(pin, val);
 }
 
+void pinModeSim(uint8_t pin, uint8_t mode)
+{
+    syncPinsWithSim();
+
+    DynamicJsonDocument jsonDoc(500);
+
+    jsonDoc["m"] = (mode == OUTPUT) ? "o" : "i";
+    jsonDoc["p"] = pin;
+
+    serializeJson(jsonDoc, Serial);
+    syncPinsWithSim();
+}
+
 #define digitalRead digitalReadSim
 #define analogRead analogReadSim
 #define digitalWrite digitalWriteSim
 #define analogWrite analogWriteSim
+
+#define pinMode pinModeSim
 
 size_t printSim(const String &s)
 {
@@ -75,7 +90,6 @@ size_t printSim(const String &s)
     DynamicJsonDocument jsonDoc(500);
     jsonDoc["print"] = s;
 
-    // return serializeJson(jsonDoc, *this);
     serializeJson(jsonDoc, Serial);
 }
 
@@ -102,9 +116,19 @@ public:
         return serializeJson(jsonDoc, Serial);
     }
 
+    size_t print(int &s)
+    {
+        return print(String(s));
+    }
+
     size_t println(const String &s)
     {
         return print(s + '\n');
+    }
+
+    size_t println(int &s)
+    {
+        return println(String(s));
     }
 };
 

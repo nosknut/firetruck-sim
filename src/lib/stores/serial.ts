@@ -19,7 +19,7 @@ function createSerialPort() {
     const portCallbacks: ((data: any) => void)[] = [];
     const webSocketCallbacks: ((data: any) => void)[] = [];
 
-    async function write(data: string) {
+    async function write(data: string, options?: { ignoreClosed?: boolean }) {
         if (port) {
             const writer = port.writable.getWriter();
             try {
@@ -29,7 +29,7 @@ function createSerialPort() {
             }
         } else if (webSocket) {
             webSocket.send(data);
-        } else {
+        } else if (!options?.ignoreClosed) {
             throw new Error("No open connection");
         }
     }
@@ -103,8 +103,8 @@ function createSerialPort() {
 
             store.set({ isOpen: false, connectionType: null })
         },
-        async send(data: any) {
-            await write(JSON.stringify(data));
+        async send(data: any, options?: { ignoreClosed?: boolean }) {
+            await write(JSON.stringify(data), options);
         },
         write,
         async onReceive(callback: (data: any) => void) {
