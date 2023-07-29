@@ -1,3 +1,5 @@
+import { toasts } from "$lib/stores/toasts";
+
 export function JsonParser() {
     let json = "";
     let numCurlyBraces = 0;
@@ -40,9 +42,15 @@ export function JsonParser() {
         json += char;
 
         if (numCurlyBraces === 0) {
-            const content = JSON.parse(json);
-            json = "";
-            return content;
+            try {
+                const content = JSON.parse(json);
+                json = "";
+                return content;
+            } catch (e) {
+                console.error('Unable to parse JSON: ', { json, error: e })
+                toasts.add('You are sending data too fast!')
+                json = "";
+            }
         }
 
         return null;
