@@ -110,10 +110,8 @@
 							label="Gas Pedal"
 						/>
 						<Slider bind:value={truck.state.turn} min={-1} max={1} label="Turn" />
-						<div style="align-items: center;" class="flex justify-between">
-							<Joystick bind:x={truck.state.turn} bind:y={joyStickY} />
-							<StopButton on:click={stopTruck} />
-						</div>
+						<StopButton on:click={stopTruck} />
+						<Joystick bind:x={truck.state.turn} bind:y={joyStickY} />
 					</Controls>
 					<Controls open label="Pin Registry" topPadding={6}>
 						<PinRegistry />
@@ -129,10 +127,8 @@
 						<Controls label="Firetruck {i + 1} Controls">
 							<Slider bind:value={state.speed} min={-1} max={1} label="Speed" />
 							<Slider bind:value={state.turn} min={-1} max={1} label="Turn" />
-							<div style="align-items: center;" class="flex justify-between">
-								<Joystick bind:x={state.turn} bind:y={state.speed} />
-								<StopButton on:click={stop} />
-							</div>
+							<StopButton on:click={stop} />
+							<Joystick bind:x={state.turn} bind:y={state.speed} />
 						</Controls>
 					{/if}
 				{/each}

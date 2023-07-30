@@ -92,6 +92,7 @@
 <style>
 	.joystick {
 		width: min-content;
+		margin: 0 auto;
 	}
 	.joystick-area {
 		position: relative;
