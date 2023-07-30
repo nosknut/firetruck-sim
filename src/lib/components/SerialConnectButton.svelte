@@ -3,9 +3,12 @@
 	import { parseIntOrDefault } from '$lib/helpers/parseIntOrDefault';
 	import { serialPort } from '$lib/stores/serial';
 	import { toasts } from '$lib/stores/toasts';
-	import { Button, Modal, Label, Input, Checkbox } from 'flowbite-svelte';
+	import { Button, Modal, Label, Input, Checkbox, Spinner } from 'flowbite-svelte';
 
 	export let large = false;
+
+	let connectingSerial = false;
+	let connectingWebSocket = false;
 
 	let connectModalOpen = false;
 
@@ -21,22 +24,26 @@
 	}
 
 	async function openSerial() {
+		connectingSerial = true;
 		await serialPort
 			.openSerialPort({ baudRate })
 			.then(onConnect)
 			.catch(() => {})
 			.finally(() => {
 				connectModalOpen = false;
+				connectingSerial = false;
 			});
 	}
 
 	async function openWebsocket() {
+		connectingWebSocket = true;
 		await serialPort
 			.openWebSocket(webSocketUrl)
 			.then(onConnect)
 			.catch(() => {})
 			.finally(() => {
 				connectModalOpen = false;
+				connectingWebSocket = false;
 			});
 	}
 </script>
@@ -67,12 +74,22 @@
 			<span>Baud Rate</span>
 			<Input placeholder="Baud Rate" type="number" bind:value={baudRate} />
 		</Label>
-		<Button class="w-full" disabled={isNaN(baudRate)} on:click={openSerial}>Serial Port</Button>
+		<Button class="w-full" disabled={isNaN(baudRate) || connectingSerial} on:click={openSerial}>
+			{#if connectingSerial}
+				<Spinner class="mr-3" size="4" color="white" />
+			{/if}
+			Serial Port
+		</Button>
 
 		<Label class="space-y-2">
 			<span>WebSocket Url</span>
 			<Input placeholder="WebSocket Url" bind:value={webSocketUrl} />
 		</Label>
-		<Button class="w-full" on:click={openWebsocket}>WebSocket</Button>
+		<Button class="w-full" on:click={openWebsocket} disabled={connectingWebSocket}>
+			{#if connectingWebSocket}
+				<Spinner class="mr-3" size="4" color="white" />
+			{/if}
+			WebSocket
+		</Button>
 	</div>
 </Modal>
