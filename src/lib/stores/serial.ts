@@ -38,12 +38,13 @@ function createSerialPort() {
 
     async function write(data: string, options?: { ignoreClosed?: boolean }) {
         if (port) {
-            if (port.writable.locked) {
-                toasts.add('Port is used by a different program');
-                console.error('Port is used by a different program');
-                await close(false);
-                throw new Error("Port is used by a different program");
-            }
+            // TODO: Find out why the port is always locked
+            // if (port.writable.locked) {
+            //     toasts.add('Port is used by a different program');
+            //     console.error('Port is used by a different program');
+            //     await close(false);
+            //     throw new Error("Port is used by a different program");
+            // }
             try {
 
                 const writer = port.writable.getWriter();
@@ -58,7 +59,7 @@ function createSerialPort() {
                         writer.releaseLock();
                     });
             } catch (e) {
-                console.warn(e)
+                console.error(e)
             }
 
         } else if (webSocket) {
@@ -89,7 +90,6 @@ function createSerialPort() {
                     write(chunk) {
                         if (serialPort) {
                             parser.parse(chunk).forEach((data) => {
-                                console.log(data)
                                 portCallbacks.forEach((callback) => {
                                     callback(data);
                                 });
