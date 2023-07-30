@@ -80,7 +80,14 @@ function createSerialPort() {
             }
 
             const serialPort = await navigator.serial.requestPort();
-            await serialPort.open(options);
+
+            try {
+                await serialPort.open(options);
+            } catch (e: any) {
+                console.error(e)
+                toasts.add('Failed to open Serial Port');
+                throw e;
+            }
 
             const parser = JsonParser();
 
