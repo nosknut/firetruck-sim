@@ -21,29 +21,12 @@ function createSerialPort() {
     const portCallbacks: ((data: any) => void)[] = [];
     const webSocketCallbacks: ((data: any) => void)[] = [];
 
-    async function write(data: string, options?: { ignoreClosed?: boolean }) {
-        if (port) {
-            if (port.writable.locked) {
-                throw new Error("Port is used by a different program");
-            }
-
-            const writer = port.writable.getWriter();
-            try {
-                await writer.write(encoder.encode(data));
-            } finally {
-                writer.releaseLock();
-            }
-        } else if (webSocket) {
-            webSocket.send(data);
-        } else if (!options?.ignoreClosed) {
-            throw new Error("No open connection");
-        }
-    }
-
-    async function close() {
+    async function close(reload: boolean) {
         await port?.close().catch(() => {
             // TODO: Find out how to close the serial port without reloading the page
-            window.location.reload();
+            if (reload) {
+                window.location.reload();
+            }
         });
         await webSocket?.close()
 
@@ -53,6 +36,41 @@ function createSerialPort() {
         store.set({ isOpen: false, connectionType: null })
     }
 
+    async function write(data: string, options?: { ignoreClosed?: boolean }) {
+        if (port) {
+            if (port.writable.locked) {
+                toasts.add('Port is used by a different program');
+                console.error('Port is used by a different program');
+                await close(false);
+                throw new Error("Port is used by a different program");
+            }
+            try {
+
+                const writer = port.writable.getWriter();
+
+                await writer.write(encoder.encode(data))
+                    .catch(async (e) => {
+                        toasts.add('Error when writing to controller: ' + e.message);
+                        console.error(e);
+                        await close(false);
+                        throw new Error(e);
+                    }).finally(() => {
+                        writer.releaseLock();
+                    });
+            } catch (e) {
+                console.warn(e)
+            }
+
+        } else if (webSocket) {
+            webSocket.send(data);
+        } else if (!options?.ignoreClosed) {
+            toasts.add('No open connection');
+            console.error('No open connection')
+            await close(false);
+            throw new Error("No open connection");
+        }
+    }
+
     return {
         subscribe: store.subscribe,
         async openSerialPort(options: SerialOptions) {
@@ -60,23 +78,33 @@ function createSerialPort() {
                 throw new Error("Port already open");
             }
 
-            port = await navigator.serial.requestPort();
-            await port.open(options);
+            const serialPort = await navigator.serial.requestPort();
+            await serialPort.open(options);
 
             const parser = JsonParser();
 
-            port.readable
+            serialPort.readable
                 .pipeThrough(new TextDecoderStream())
                 .pipeTo(new WritableStream({
                     write(chunk) {
-                        parser.parse(chunk).forEach((data) => {
-                            portCallbacks.forEach((callback) => {
-                                callback(data);
+                        if (serialPort) {
+                            parser.parse(chunk).forEach((data) => {
+                                console.log(data)
+                                portCallbacks.forEach((callback) => {
+                                    callback(data);
+                                });
                             });
-                        });
+                        }
                     }
                 }))
 
+            serialPort.ondisconnect = () => {
+                toasts.add('Port disconnected');
+                console.error('Port disconnected');
+                close(false)
+            };
+
+            port = serialPort;
             store.set({ isOpen: true, connectionType: "serial" })
         },
         async openWebSocket(url: string) {
@@ -97,10 +125,10 @@ function createSerialPort() {
                     console.error(event);
                     toasts.add("Unable to connect to WebSocket");
 
-                    close();
+                    close(false);
                 }
 
-                ws.onclose = close;
+                ws.onclose = () => close(false);
 
                 ws.onopen = () => {
                     const parser = JsonParser();
@@ -123,7 +151,7 @@ function createSerialPort() {
         },
         async close() {
             port?.readable.cancel("User closed port");
-            await close();
+            await close(true);
         },
         async send(data: any, options?: { ignoreClosed?: boolean }) {
             await write(JSON.stringify(data), options);

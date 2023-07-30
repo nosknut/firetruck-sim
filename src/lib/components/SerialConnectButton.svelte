@@ -17,34 +17,27 @@
 
 	async function onConnect() {
 		// Requests the controller to send its current state
-		await serialPort.send({ init: true }).catch((e) => {
-			toasts.add('Could not send init message to controller');
-			console.error(e);
-		});
+		await serialPort.send({ init: true }).catch(() => {});
 	}
 
 	async function openSerial() {
 		await serialPort
 			.openSerialPort({ baudRate })
 			.then(onConnect)
-			.catch((e) => {
-				toasts.add(e.message);
-				console.error(e);
+			.catch(() => {})
+			.finally(() => {
+				connectModalOpen = false;
 			});
-			
-		connectModalOpen = false;
 	}
 
 	async function openWebsocket() {
 		await serialPort
 			.openWebSocket(webSocketUrl)
 			.then(onConnect)
-			.catch((e) => {
-				toasts.add(e.message);
-				console.error(e);
+			.catch(() => {})
+			.finally(() => {
+				connectModalOpen = false;
 			});
-
-		connectModalOpen = false;
 	}
 </script>
 

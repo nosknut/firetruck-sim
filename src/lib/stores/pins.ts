@@ -36,7 +36,8 @@ function createPins() {
         await serialPort?.send({
             p: pin,
             v: value,
-        }, options)
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        }, options).catch(() => { })
     }
 
     function setPins(newValues: PinValueStore) {
