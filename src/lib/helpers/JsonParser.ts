@@ -32,6 +32,12 @@ export function JsonParser() {
         }
 
         if (char === "{") {
+            // TODO: Handle nested objects with corrupted data: { "ke{"key": 1}
+            if (numCurlyBraces > 0) {
+                console.error('Unable to parse JSON: ', { json })
+                json = "";
+                numCurlyBraces = 0;
+            }
             numCurlyBraces += 1;
         }
 
