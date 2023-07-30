@@ -128,7 +128,16 @@ function createSerialPort() {
                     close(false);
                 }
 
-                ws.onclose = () => close(false);
+                ws.onclose = () => {
+                    if (!resolved) {
+                        reject();
+                    }
+
+                    console.error("WebSocket closed");
+                    toasts.add("WebSocket closed");
+
+                    close(false)
+                };
 
                 ws.onopen = () => {
                     const parser = JsonParser();
