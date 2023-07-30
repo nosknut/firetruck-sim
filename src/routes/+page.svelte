@@ -120,7 +120,8 @@
 					</Controls>
 				{:else}
 					<Controls label="Firetruck 1 Controls">
-						Connect to a controller to use this truck.
+						Connect a controller to use this truck.
+						<SerialConnectButton large />
 					</Controls>
 				{/if}
 				{#each truckStates as { state, stop }, i}

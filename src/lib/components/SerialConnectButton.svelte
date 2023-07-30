@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { serialPort } from '$lib/stores/serial';
-	import { onDestroy } from 'svelte';
 	import { toasts } from '$lib/stores/toasts';
 	import { Button, Modal, Label, Input, Checkbox } from 'flowbite-svelte';
 
+	export let large = false;
 	let connectModalOpen = false;
 
 	let webSocketUrl = (browser && localStorage.getItem('webSocketUrl')) || 'ws://localhost:4001';
@@ -26,16 +26,22 @@
 		// Requests the controller to send its current state
 		await serialPort.send({ init: true });
 	}
-
-	onDestroy(() => {
-		serialPort.close();
-	});
 </script>
 
 {#if !$serialPort.isOpen}
-	<Button size="sm" color="green" on:click={() => (connectModalOpen = true)}>Connect</Button>
+	<Button
+		size={large ? 'lg' : 'sm'}
+		class={large ? 'w-full mt-2' : ''}
+		color="green"
+		on:click={() => (connectModalOpen = true)}>Connect</Button
+	>
 {:else}
-	<Button size="sm" color="red" on:click={serialPort.close}>Disconnect</Button>
+	<Button
+		size={large ? 'lg' : 'sm'}
+		class={large ? 'w-full mt-2' : ''}
+		color="red"
+		on:click={serialPort.close}>Disconnect</Button
+	>
 {/if}
 
 <Modal bind:open={connectModalOpen} size="xs" autoclose={false} class="w-full">
