@@ -52,7 +52,7 @@ void loop()
         Serial.print(", ");
 
         Serial.print("Speed: ");
-        Serial.println(speed);
+        Serial.print(speed);
         Serial.print(", ");
 
         Serial.print("Motor Power: ");
