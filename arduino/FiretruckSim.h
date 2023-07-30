@@ -1,6 +1,12 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 
+// All the pinMode payloads that have
+// been sent to the simulator will be stored here.
+// If the simulator is reset, it will request the pinModes
+// and this string will be used.
+String pinModes = "";
+
 int pinValues[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 void syncPinsWithSim()
@@ -22,6 +28,48 @@ void syncPinsWithSim()
             int pin = jsonDoc["p"].as<int>();
             int value = jsonDoc["v"].as<int>();
             pinValues[pin] = value;
+        }
+
+        if (jsonDoc.containsKey("init"))
+        {
+            // Send the pinModes to the simulator
+            Serial.print(pinModes);
+
+            // Parse all the json messages in the pinModes string
+            // and send the pin values for all outputs
+            // to the simulator.
+
+            String buffer = pinModes;
+            while (buffer.length() > 0)
+            {
+                DynamicJsonDocument jsonDoc(100);
+                DeserializationError error = deserializeJson(jsonDoc, buffer);
+
+                // Remove the json message from the buffer
+                buffer = buffer.substring(buffer.indexOf("}") + 1);
+
+                if (error != DeserializationError::Ok)
+                {
+                    Serial.print("deserializeJson() failed: ");
+                    Serial.println(error.c_str());
+                    continue;
+                }
+
+                if (jsonDoc.containsKey("m"))
+                {
+                    int pin = jsonDoc["p"].as<int>();
+                    String mode = jsonDoc["m"].as<String>();
+
+                    if (mode == "o")
+                    {
+                        // Send the pin value to the simulator
+                        DynamicJsonDocument jsonDoc(100);
+                        jsonDoc["p"] = pin;
+                        jsonDoc["v"] = pinValues[pin];
+                        serializeJson(jsonDoc, Serial);
+                    }
+                }
+            }
         }
     }
 }
@@ -73,6 +121,10 @@ void pinModeSim(uint8_t pin, uint8_t mode)
     jsonDoc["p"] = pin;
 
     serializeJson(jsonDoc, Serial);
+
+    // Store the payload in a string for later use
+    serializeJson(jsonDoc, pinModes);
+
     syncPinsWithSim();
 }
 

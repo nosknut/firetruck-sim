@@ -22,6 +22,9 @@
 				console.error(e);
 			});
 		}
+
+		// Requests the controller to send its current state
+		await serialPort.send({ init: true });
 	}
 
 	onDestroy(() => {
