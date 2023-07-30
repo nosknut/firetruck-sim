@@ -1,27 +1,35 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
+	import { parseIntOrDefault } from '$lib/helpers/parseIntOrDefault';
 	import { serialPort } from '$lib/stores/serial';
 	import { toasts } from '$lib/stores/toasts';
 	import { Button, Modal, Label, Input, Checkbox } from 'flowbite-svelte';
 
 	export let large = false;
+
 	let connectModalOpen = false;
+
+	let baudRate = browser ? parseIntOrDefault(localStorage.getItem('baudRate'), 115200) : 115200;
+	$: browser && localStorage.setItem('baudRate', String(baudRate));
 
 	let webSocketUrl = (browser && localStorage.getItem('webSocketUrl')) || 'ws://localhost:4001';
 	$: browser && localStorage.setItem('webSocketUrl', webSocketUrl);
 
-	async function open(type: 'serial' | 'websocket') {
-		if (type === 'serial') {
-			await serialPort.openSerialPort({ baudRate: 115200 }).catch((e) => {
-				toasts.add(e.message);
-				console.error(e);
-			});
-		} else {
-			await serialPort.openWebSocket(webSocketUrl).catch((e) => {
-				toasts.add('Could not connect to websocket');
-				console.error(e);
-			});
-		}
+	async function openSerial(baudRate: number) {
+		await serialPort.openSerialPort({ baudRate }).catch((e) => {
+			toasts.add(e.message);
+			console.error(e);
+		});
+
+		// Requests the controller to send its current state
+		await serialPort.send({ init: true });
+	}
+
+	async function openWebsocket() {
+		await serialPort.openWebSocket(webSocketUrl).catch((e) => {
+			toasts.add('Could not connect to websocket');
+			console.error(e);
+		});
 
 		// Requests the controller to send its current state
 		await serialPort.send({ init: true });
@@ -50,11 +58,18 @@
 
 		Connect to a controller via serial port or WebSocket.
 
+		<Label class="space-y-2">
+			<span>Baud Rate</span>
+			<Input placeholder="Baud Rate" type="number" bind:value={baudRate} />
+		</Label>
 		<Button
 			class="w-full"
+			disabled={isNaN(baudRate)}
 			on:click={() => {
-				open('serial');
-				connectModalOpen = false;
+				if (!isNaN(baudRate)) {
+					baudRate = 9600;
+					openSerial(baudRate);
+				}
 			}}>Serial Port</Button
 		>
 
@@ -65,7 +80,7 @@
 		<Button
 			class="w-full"
 			on:click={() => {
-				open('websocket');
+				openWebsocket();
 				connectModalOpen = false;
 			}}>WebSocket</Button
 		>
