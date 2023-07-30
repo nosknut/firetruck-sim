@@ -8,6 +8,7 @@ const int MOTOR_POWER_PIN = 5;
 const int SPEEDOMETER_PIN = 6;
 
 unsigned long timer = 0;
+unsigned long printTimer = 0;
 
 void setup()
 {
@@ -42,25 +43,38 @@ void loop()
         {
             motorPower = max(motorPower - 10, gasPedal);
         }
-
-        Serial.print("Gas Pedal: ");
-        Serial.print(gasPedal);
-        Serial.print(", ");
-
-        Serial.print("Direction: ");
-        Serial.print(direction ? "Forward" : "Backward");
-        Serial.print(", ");
-
-        Serial.print("Speed: ");
-        Serial.print(speed);
-        Serial.print(", ");
-
-        Serial.print("Motor Power: ");
-        Serial.print(motorPower);
-
-        Serial.println("");
-
         timer = millis();
+    }
+
+    // Printing 4 times per second because printing every loop will
+    // slow down the simulation.
+    if ((millis() - printTimer) > 250)
+    {
+        // Sending everything as one print
+        // because it's faster than sending
+        // each value separately.
+
+        String message = "";
+
+        message += "Gas Pedal: ";
+        message += gasPedal;
+        message += ", ";
+
+        message += "Direction: ";
+        message += direction ? "Forward" : "Backward";
+        message += ", ";
+
+        message += "Speed: ";
+        message += speed;
+        message += ", ";
+
+        message += "Motor Power: ";
+        message += motorPower;
+        message += ", ";
+
+        Serial.println(message);
+
+        printTimer = millis();
     }
 
     analogWrite(MOTOR_POWER_PIN, motorPower);
