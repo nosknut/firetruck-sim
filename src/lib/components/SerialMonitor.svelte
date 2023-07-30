@@ -24,6 +24,7 @@
 	</div>
 	<Textarea
 		rows="5"
+		unWrappedClass="whitespace-pre"
 		id="serial-monitor"
 		placeholder="No messages"
 		bind:value={$serialMonitor}
