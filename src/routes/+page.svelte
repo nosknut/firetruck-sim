@@ -53,11 +53,7 @@
 	$: truck.state.speed = $truckSpeed;
 
 	$: directionIndicator =
-		$pins[DIRECTION_PIN] === undefined
-			? 'N/A'
-			: $pins[DIRECTION_PIN]
-			? 'Forward'
-			: 'Backward';
+		$pins[DIRECTION_PIN] === undefined ? 'N/A' : $pins[DIRECTION_PIN] ? 'Forward' : 'Backward';
 
 	$simPins.add(SPEED_SENSOR_PIN.toString());
 	onDestroy(() => $simPins.delete(SPEED_SENSOR_PIN.toString()));
