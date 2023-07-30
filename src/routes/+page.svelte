@@ -21,9 +21,9 @@
 	import { writable } from 'svelte/store';
 
 	const GAS_PEDAL_PIN = 1;
-	const DIRECTION_PIN = 2;
+	const DIRECTION_PICKER_PIN = 2;
 	const SPEED_SENSOR_PIN = 3;
-	const DIRECTION_INDICATOR_PIN = 4;
+	const DIRECTION_PIN = 4;
 	const MOTOR_POWER_PIN = 5;
 	const SPEEDOMETER_PIN = 6;
 
@@ -35,11 +35,11 @@
 	// Only update direction if the joystick is being used
 	$: {
 		$pins[GAS_PEDAL_PIN] = Math.round(Math.abs(joyStickY) * 255);
-		$pins[DIRECTION_PIN] = Number(joyStickY >= 0);
+		$pins[DIRECTION_PICKER_PIN] = Number(joyStickY >= 0);
 	}
 
 	// Start with direction forward
-	$pins[DIRECTION_PIN] = 1;
+	$pins[DIRECTION_PICKER_PIN] = 1;
 
 	let truckStates = [createVehicleState(), createVehicleState(), createVehicleState()];
 
@@ -53,9 +53,9 @@
 	$: truck.state.speed = $truckSpeed;
 
 	$: directionIndicator =
-		$pins[DIRECTION_INDICATOR_PIN] === undefined
+		$pins[DIRECTION_PIN] === undefined
 			? 'N/A'
-			: $pins[DIRECTION_INDICATOR_PIN]
+			: $pins[DIRECTION_PIN]
 			? 'Forward'
 			: 'Backward';
 
@@ -89,7 +89,7 @@
 						<SerialMonitor />
 					</Controls>
 					<Controls open label="Firetruck 1 Serial Controls">
-						<NumberToggle bind:checked={$pins[DIRECTION_PIN]} label="Direction" />
+						<NumberToggle bind:checked={$pins[DIRECTION_PICKER_PIN]} label="Direction" />
 						<div class="text-center">
 							<div>
 								Direction: {directionIndicator}
