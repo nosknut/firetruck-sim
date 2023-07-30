@@ -2,6 +2,8 @@
 import { JsonParser } from '$lib/helpers/JsonParser';
 import { writable } from "svelte/store";
 
+import { toasts } from './toasts';
+
 function createSerialPort() {
     const store = writable<{
         isOpen: boolean;
@@ -21,6 +23,10 @@ function createSerialPort() {
 
     async function write(data: string, options?: { ignoreClosed?: boolean }) {
         if (port) {
+            if (port.writable.locked) {
+                throw new Error("Port is used by a different program");
+            }
+
             const writer = port.writable.getWriter();
             try {
                 await writer.write(encoder.encode(data));
@@ -32,6 +38,19 @@ function createSerialPort() {
         } else if (!options?.ignoreClosed) {
             throw new Error("No open connection");
         }
+    }
+
+    async function close() {
+        await port?.close().catch(() => {
+            // TODO: Find out how to close the serial port without reloading the page
+            window.location.reload();
+        });
+        await webSocket?.close()
+
+        port = null
+        webSocket = null
+
+        store.set({ isOpen: false, connectionType: null })
     }
 
     return {
@@ -66,11 +85,22 @@ function createSerialPort() {
             }
 
             await new Promise<void>((resolve, reject) => {
+                let resolved = false;
+
                 const ws = new WebSocket(url);
 
                 ws.onerror = (event) => {
-                    reject(event);
+                    if (!resolved) {
+                        reject(event);
+                    }
+
+                    console.error(event);
+                    toasts.add("Unable to connect to WebSocket");
+
+                    close();
                 }
+
+                ws.onclose = close;
 
                 ws.onopen = () => {
                     const parser = JsonParser();
@@ -86,22 +116,14 @@ function createSerialPort() {
                     webSocket = ws;
                     store.set({ isOpen: true, connectionType: "websocket" })
 
+                    resolved = true;
                     resolve();
                 }
             });
         },
         async close() {
-            port?.readable.cancel("User closed port")
-            await port?.close().catch(() => {
-                // TODO: Find out how to close the serial port without reloading the page
-                window.location.reload();
-            });
-            await webSocket?.close()
-
-            port = null
-            webSocket = null
-
-            store.set({ isOpen: false, connectionType: null })
+            port?.readable.cancel("User closed port");
+            await close();
         },
         async send(data: any, options?: { ignoreClosed?: boolean }) {
             await write(JSON.stringify(data), options);

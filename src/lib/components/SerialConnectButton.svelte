@@ -15,24 +15,36 @@
 	let webSocketUrl = (browser && localStorage.getItem('webSocketUrl')) || 'ws://localhost:4001';
 	$: browser && localStorage.setItem('webSocketUrl', webSocketUrl);
 
-	async function openSerial(baudRate: number) {
-		await serialPort.openSerialPort({ baudRate }).catch((e) => {
-			toasts.add(e.message);
+	async function onConnect() {
+		// Requests the controller to send its current state
+		await serialPort.send({ init: true }).catch((e) => {
+			toasts.add('Could not send init message to controller');
 			console.error(e);
 		});
+	}
 
-		// Requests the controller to send its current state
-		await serialPort.send({ init: true });
+	async function openSerial() {
+		await serialPort
+			.openSerialPort({ baudRate })
+			.then(onConnect)
+			.catch((e) => {
+				toasts.add(e.message);
+				console.error(e);
+			});
+			
+		connectModalOpen = false;
 	}
 
 	async function openWebsocket() {
-		await serialPort.openWebSocket(webSocketUrl).catch((e) => {
-			toasts.add('Could not connect to websocket');
-			console.error(e);
-		});
+		await serialPort
+			.openWebSocket(webSocketUrl)
+			.then(onConnect)
+			.catch((e) => {
+				toasts.add(e.message);
+				console.error(e);
+			});
 
-		// Requests the controller to send its current state
-		await serialPort.send({ init: true });
+		connectModalOpen = false;
 	}
 </script>
 
@@ -62,27 +74,12 @@
 			<span>Baud Rate</span>
 			<Input placeholder="Baud Rate" type="number" bind:value={baudRate} />
 		</Label>
-		<Button
-			class="w-full"
-			disabled={isNaN(baudRate)}
-			on:click={() => {
-				if (!isNaN(baudRate)) {
-					baudRate = 9600;
-					openSerial(baudRate);
-				}
-			}}>Serial Port</Button
-		>
+		<Button class="w-full" disabled={isNaN(baudRate)} on:click={openSerial}>Serial Port</Button>
 
 		<Label class="space-y-2">
 			<span>WebSocket Url</span>
 			<Input placeholder="WebSocket Url" bind:value={webSocketUrl} />
 		</Label>
-		<Button
-			class="w-full"
-			on:click={() => {
-				openWebsocket();
-				connectModalOpen = false;
-			}}>WebSocket</Button
-		>
+		<Button class="w-full" on:click={openWebsocket}>WebSocket</Button>
 	</div>
 </Modal>
