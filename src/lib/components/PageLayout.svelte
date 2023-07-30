@@ -1,6 +1,7 @@
 <script>
 	import { DarkMode } from 'flowbite-svelte';
 	import { Navbar, NavBrand, NavLi, NavUl, NavHamburger } from 'flowbite-svelte';
+	import image from '$lib/images/firetruck.png';
 </script>
 
 <div class="relative">
@@ -10,6 +11,7 @@
 		let:toggle
 	>
 		<NavBrand href="/">
+			<img src={image} class="mr-3 h-6 sm:h-9" alt="Firetruck Sim Logo" />
 			<span class="self-center whitespace-nowrap text-xl font-semibold dark:text-white"
 				>Firetruck Sim</span
 			>
