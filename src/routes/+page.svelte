@@ -78,7 +78,7 @@
 	</div>
 
 	<div class="flex flex-row h-full w-full">
-		<div class="w-96">
+		<div class="w-96 resize-x overflow-x-auto">
 			<ControlsPanel>
 				{#if $serialPort.isOpen}
 					<Controls open label="Serial Monitor">

@@ -27,7 +27,7 @@
 {#if $serialPort.isOpen}
 	{#if Object.keys($modes).length}
 		<Table shadow color="blue">
-			<TableHead>
+			<TableHead theadClass="text-xs uppercase text-center">
 				<TableHeadCell>Pin</TableHeadCell>
 				<TableHeadCell>Value</TableHeadCell>
 				<TableHeadCell>Toggle</TableHeadCell>
@@ -37,36 +37,41 @@
 					<TableBodyRow color={$pins[pin] ? 'green' : 'blue'}>
 						<TableBodyCell tdClass="px-6 py-1 whitespace-nowrap font-medium">{pin}</TableBodyCell>
 						<TableBodyCell tdClass="px-6 py-1 whitespace-nowrap font-medium">
-							{#if $modes[pin] === 'input'}
-								<Input
-									size="sm"
-									placeholder={$pins[pin]}
-									bind:value={valueInputs[pin]}
-									defaultClass="w-10 h-5 text-center"
-									on:keydown={onEnter(() => setPin(pin))}
-								/>
-							{:else}
-								<div class="text-center">{$pins[pin]}</div>
-							{/if}
+							<div class="flex justify-center">
+								{#if $modes[pin] === 'input'}
+									<Input
+										size="sm"
+										placeholder={$pins[pin]}
+										bind:value={valueInputs[pin]}
+										defaultClass="w-10 h-5 text-center"
+										on:keydown={onEnter(() => setPin(pin))}
+									/>
+								{:else}
+									{$pins[pin]}
+								{/if}
+							</div>
 						</TableBodyCell>
 						<TableBodyCell tdClass="px-6 py-1 whitespace-nowrap font-medium">
-							{#if $simPins.has(pin)}
-								<div class="text-center">Sim</div>
-							{:else if $modes[pin] === 'input'}
-								<Toggle
-									size="small"
-									checked={!!$pins[pin]}
-									on:change={() => pins.setPin(pin, !$pins[pin])}
-								/>
-							{:else}
-								<div class="text-center">Output</div>
-							{/if}
+							<div class="flex justify-center">
+								{#if $simPins.has(pin)}
+									Sim
+								{:else if $modes[pin] === 'input'}
+									<Toggle
+										size="small"
+										checked={!!$pins[pin]}
+										on:change={() => pins.setPin(pin, !$pins[pin])}
+									/>
+								{:else}
+									Output
+								{/if}
+							</div>
 						</TableBodyCell>
 					</TableBodyRow>
 				{/each}
 			</TableBody>
 		</Table>
 	{:else}
-		No pins detected. The controller might not be running or you may have forgotten to run pinMode().
+		No pins detected. The controller might not be running or you may have forgotten to run
+		pinMode().
 	{/if}
 {/if}

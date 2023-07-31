@@ -17,7 +17,7 @@
 </script>
 
 <div bind:this={anchor}>
-	<Card class="font-normal text-gray-700 dark:text-gray-400 leading-tight shadow-lg gap-1">
+	<Card class="font-normal text-gray-700 dark:text-gray-400 leading-tight shadow-lg gap-1 max-w-none">
 		<details bind:open>
 			<summary>
 				<h5 class="inline mb-2 font-bold tracking-tight text-gray-900 dark:text-white">{label}</h5>
