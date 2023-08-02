@@ -86,15 +86,15 @@
 					</Controls>
 					<Controls open label="Firetruck 1 Serial Controls">
 						<NumberToggle bind:checked={$pins[DIRECTION_PICKER_PIN]} label="Direction" />
-						<div class="text-center">
-							<div>
-								Direction: {directionIndicator}
+						<div class="my-2">
+							<div class="flex justify-between">
+								Direction: <div>{directionIndicator}</div>
 							</div>
-							<div>
-								Speedometer: {$pins[SPEEDOMETER_PIN] ?? 'N/A'}
+							<div class="flex justify-between">
+								Speedometer: <div>{$pins[SPEEDOMETER_PIN] ?? 'N/A'}</div>
 							</div>
-							<div>
-								Power: {$pins[MOTOR_POWER_PIN] ?? 'N/A'}
+							<div class="flex justify-between">
+								Power: <div>{$pins[MOTOR_POWER_PIN] ?? 'N/A'}</div>
 							</div>
 						</div>
 						<Slider
