@@ -20,6 +20,7 @@
 	import { Canvas } from '@threlte/core';
 	import { T } from '@threlte/core';
 	import { OrbitControls } from '@threlte/extras';
+	import Measured from '$lib/components/Measured.svelte';
 	const GAS_PEDAL_PIN = 1;
 	const DIRECTION_PICKER_PIN = 2;
 	const SPEED_SENSOR_PIN = 3;
@@ -130,19 +131,21 @@
 				{/each}
 			</ControlsPanel>
 		</div>
-		<div class="w-full">
-			<Canvas>
-				<Road />
-				{#each truckStates as { state }}
-					<VehiclePhysics profile={{ maxSpeed: 1, maxTurnAngle: 30 }} bind:state />
-					<Firetruck bind:state />
-				{/each}
-				<T.PerspectiveCamera zoom={0.5} position={[-10, 10, 10]} makeDefault>
-					<OrbitControls enableDamping />
-				</T.PerspectiveCamera>
-				<T.AmbientLight />
-				<T.DirectionalLight position={[10, 10, 5]} />
-			</Canvas>
+		<div class="w-full overflow-auto">
+			<Measured let:height let:width>
+				<Canvas size={{ height, width }}>
+					<Road />
+					{#each truckStates as { state }}
+						<VehiclePhysics profile={{ maxSpeed: 1, maxTurnAngle: 30 }} bind:state />
+						<Firetruck bind:state />
+					{/each}
+					<T.PerspectiveCamera zoom={0.5} position={[-10, 10, 10]} makeDefault>
+						<OrbitControls />
+					</T.PerspectiveCamera>
+					<T.AmbientLight />
+					<T.DirectionalLight position={[10, 10, 5]} />
+				</Canvas>
+			</Measured>
 		</div>
 	</div>
 </PageLayout>
