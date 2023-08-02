@@ -131,7 +131,7 @@
 				{/each}
 			</ControlsPanel>
 		</div>
-		<div class="w-full overflow-auto">
+		<div class="w-full overflow-auto bg-black">
 			<Measured let:height let:width>
 				<Canvas size={{ height, width }}>
 					<Road />
