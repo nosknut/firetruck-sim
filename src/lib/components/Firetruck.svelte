@@ -1,11 +1,10 @@
 <script lang="ts">
-	import * as THREE from 'three';
-	import * as SC from 'svelte-cubed';
+	import { T } from '@threlte/core';
 	import Tire from './Tire.svelte';
 	import type { VehicleState } from '$lib/types/VehicleState';
 	import { createVehicleState } from '$lib/helpers/createVehicleState';
 
-	export let state: VehicleState = createVehicleState();
+	export let state: VehicleState = createVehicleState().state;
 
 	$: position = state.transform.position;
 	$: rotation = state.transform.rotation;
@@ -23,37 +22,35 @@
 	let tireX = width / 2;
 	let tireY = 0.5;
 	let tireZ = length / 2 - 1.5;
+
+	const maxColor = 500;
 </script>
 
-<SC.Group
+<T.Group
 	position={[position.x + 2.5, position.y + 0, position.z + 1]}
 	rotation={[rotation.x, rotation.y, rotation.z]}
 >
-	<SC.Mesh
-		material={new THREE.MeshBasicMaterial({ color: 'red' })}
-		position={[0, height / 2 + 0.5, 0]}
-		geometry={new THREE.BoxGeometry(width, height, length)}
-	/>
+	<T.Mesh position={[0, height / 2 + 0.5, 0]}>
+		<T.MeshBasicMaterial color={[255 / maxColor, 0, 0]} />
+		<T.BoxGeometry args={[width, height, length]} />
+	</T.Mesh>
 
-	<SC.Mesh
-		material={new THREE.MeshBasicMaterial({ color: 'rgb(150, 150, 150)' })}
-		position={[0, height + 1, 1]}
-		geometry={new THREE.BoxGeometry(1, 1, 12)}
-	/>
-	<SC.Mesh
-		material={new THREE.MeshBasicMaterial({ color: 'rgb(70, 70, 70)' })}
-		position={[0, height + 1, length / 2 + 3]}
-		geometry={new THREE.BoxGeometry(2, 2, 2)}
-	/>
+	<T.Mesh position={[0, height + 1, 1]}>
+		<T.MeshBasicMaterial color={[150 / maxColor, 150 / maxColor, 150 / maxColor]} />
+		<T.BoxGeometry args={[1, 1, 12]} />
+	</T.Mesh>
+	<T.Mesh position={[0, height + 1, length / 2 + 3]}>
+		<T.MeshBasicMaterial color={[70 / maxColor, 70 / maxColor, 70 / maxColor]} />
+		<T.BoxGeometry args={[2, 2, 2]} />
+	</T.Mesh>
 
-	<SC.Mesh
-		material={new THREE.MeshBasicMaterial({ color: 'rgb(30, 30, 30)' })}
-		position={[0, height / 2 + 1, length / 2 - 0.75]}
-		geometry={new THREE.BoxGeometry(3, height - 2, 2)}
-	/>
+	<T.Mesh position={[0, height / 2 + 1, length / 2 - 0.75]}>
+		<T.MeshBasicMaterial color={[30 / maxColor, 30 / maxColor, 30 / maxColor]} />
+		<T.BoxGeometry args={[3, height - 2, 2]} />
+	</T.Mesh>
 
 	<Tire position={{ x: tireX, y: tireY, z: tireZ }} rotation={frontTireRotation} />
 	<Tire position={{ x: -tireX, y: tireY, z: tireZ }} rotation={frontTireRotation} />
 	<Tire position={{ x: tireX, y: tireY, z: -tireZ }} rotation={{ x: 0, y: 0, z: 0 }} />
 	<Tire position={{ x: -tireX, y: tireY, z: -tireZ }} rotation={{ x: 0, y: 0, z: 0 }} />
-</SC.Group>
+</T.Group>

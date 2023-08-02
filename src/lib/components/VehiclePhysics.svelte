@@ -1,12 +1,12 @@
 <script lang="ts">
-	import * as SC from 'svelte-cubed';
+	import { useFrame } from '@threlte/core';
 	import type { VehicleState } from '$lib/types/VehicleState';
 	import type { VehicleProfile } from '$lib/types/VehicleProfile';
 
 	export let state: VehicleState;
 	export let profile: VehicleProfile;
 
-	SC.onFrame(() => {
+	useFrame(() => {
 		const { maxTurnAngle, maxSpeed } = profile;
 
 		const distance = state.speed * maxSpeed * 0.1;

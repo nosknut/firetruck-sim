@@ -1,22 +1,24 @@
 <script lang="ts">
-	import * as THREE from 'three';
-	import * as SC from 'svelte-cubed';
+	import { T, watch } from '@threlte/core';
 	import image from '$lib/images/street.jpg';
+	import { useTexture } from '@threlte/extras';
+	import { RepeatWrapping } from 'three/src/constants';
 
-	let roadTexture = new THREE.TextureLoader().load(image);
-	roadTexture.wrapS = THREE.RepeatWrapping;
-	roadTexture.wrapT = THREE.RepeatWrapping;
-	roadTexture.repeat.set(1, 2);
-	roadTexture.rotation = Math.PI / 2;
+	const roadTexture = useTexture(image);
 
-	let roadMaterial = new THREE.MeshBasicMaterial({
-		map: roadTexture
+	watch(roadTexture, (texture) => {
+		if (texture) {
+			texture.wrapS = RepeatWrapping;
+			texture.wrapT = RepeatWrapping;
+			texture.repeat.set(1, 2);
+			texture.rotation = Math.PI / 2;
+		}
 	});
 </script>
 
-<SC.Mesh
-	material={roadMaterial}
-	position={[0, 0, 0]}
-	geometry={new THREE.PlaneGeometry(20, 40)}
-	rotation={[-Math.PI / 2, 0, 0]}
-/>
+{#if $roadTexture}
+	<T.Mesh position={[0, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+		<T.PlaneGeometry args={[20, 40]} />
+		<T.MeshStandardMaterial map={$roadTexture} />
+	</T.Mesh>
+{/if}

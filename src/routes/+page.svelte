@@ -1,7 +1,6 @@
 <script lang="ts">
 	import Firetruck from '$lib/components/Firetruck.svelte';
 	import Road from '$lib/components/Road.svelte';
-	import * as SC from 'svelte-cubed';
 	import { createVehicleState } from '$lib/helpers/createVehicleState';
 	import VehiclePhysics from '$lib/components/VehiclePhysics.svelte';
 	import { pins, simPins } from '$lib/stores/pins';
@@ -15,11 +14,12 @@
 	import SerialMonitor from '$lib/components/SerialMonitor.svelte';
 	import Slider from '$lib/components/Slider.svelte';
 	import StopButton from '$lib/components/StopButton.svelte';
-	import FixCanvas from '$lib/components/FixCanvas.svelte';
 	import { onDestroy } from 'svelte';
 	import NumberToggle from '$lib/components/NumberToggle.svelte';
 	import { writable } from 'svelte/store';
-
+	import { Canvas } from '@threlte/core';
+	import { T } from '@threlte/core';
+	import { OrbitControls } from '@threlte/extras';
 	const GAS_PEDAL_PIN = 1;
 	const DIRECTION_PICKER_PIN = 2;
 	const SPEED_SENSOR_PIN = 3;
@@ -131,22 +131,18 @@
 			</ControlsPanel>
 		</div>
 		<div class="w-full">
-			<FixCanvas>
-				<SC.Canvas>
-					<Road />
-					{#each truckStates as { state }}
-						<VehiclePhysics profile={{ maxSpeed: 1, maxTurnAngle: 30 }} bind:state />
-						<Firetruck bind:state />
-					{/each}
-					<SC.PerspectiveCamera zoom={0.5} position={[-10, 10, 10]} />
-					<SC.OrbitControls />
-				</SC.Canvas>
-				<style>
-					.container {
-						max-width: 100%;
-					}
-				</style>
-			</FixCanvas>
+			<Canvas>
+				<Road />
+				{#each truckStates as { state }}
+					<VehiclePhysics profile={{ maxSpeed: 1, maxTurnAngle: 30 }} bind:state />
+					<Firetruck bind:state />
+				{/each}
+				<T.PerspectiveCamera zoom={0.5} position={[-10, 10, 10]} makeDefault>
+					<OrbitControls enableDamping />
+				</T.PerspectiveCamera>
+				<T.AmbientLight />
+				<T.DirectionalLight position={[10, 10, 5]} />
+			</Canvas>
 		</div>
 	</div>
 </PageLayout>

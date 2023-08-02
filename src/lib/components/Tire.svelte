@@ -1,7 +1,5 @@
 <script lang="ts">
-	import * as THREE from 'three';
-	import * as SC from 'svelte-cubed';
-	import { CylinderGeometry } from 'three';
+	import { T } from '@threlte/core';
 
 	export let position: {
 		x: number;
@@ -16,9 +14,10 @@
 	};
 </script>
 
-<SC.Mesh
-	material={new THREE.MeshBasicMaterial({ color: 'black' })}
+<T.Mesh
 	position={[position.x, position.y, position.z]}
-	rotation={[rotation.x, rotation.y, rotation.z + Math.PI/2]}
-	geometry={new THREE.CylinderGeometry(0.75, 0.75, 0.5)}
-/>
+	rotation={[rotation.x, rotation.y, rotation.z + Math.PI / 2]}
+>
+	<T.MeshBasicMaterial color={[0, 0, 0]} />
+	<T.CylinderGeometry args={[0.75, 0.75, 0.5]} />
+</T.Mesh>
