@@ -5,6 +5,18 @@ export function createVehicleState() {
     const state: VehicleState = {
         speed: 0,
         turn: 0,
+        boom: {
+            rotation: 0,
+            elevation: 0,
+        },
+        lights: {
+            headlights: false,
+            flash: {
+                left: false,
+                right: false,
+            },
+        },
+        wiper: 0,
         transform: {
             position: new Vector3(0, 0, 0),
             rotation: new Vector3(0, 0, 0)

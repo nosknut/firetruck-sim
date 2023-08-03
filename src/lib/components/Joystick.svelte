@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { Label } from "flowbite-svelte";
 
+	export let label = "Joystick";
+
+	export let snapDown = false;
+
 	export let size = 100;
 	export let round = false;
 
@@ -31,6 +35,8 @@
 		height: joystickSize.height / 2
 	};
 
+	$: yOffset = snapDown ? joystickSize.height : joystickHalfSize.height;
+
 	let clicked = false;
 
 	$: if (!clicked) {
@@ -45,24 +51,24 @@
 		let joystickPosition = areaHandle.getBoundingClientRect();
 
 		xPos = -(joystickPosition.x - event.clientX) - joystickHalfSize.width;
-		yPos = joystickPosition.y - event.clientY + joystickHalfSize.height;
+		yPos = joystickPosition.y - event.clientY + yOffset;
 		distance = Math.sqrt(xPos * xPos + yPos * yPos);
 		angle = Math.atan2(yPos, xPos);
 
 		if (round) {
 			if (distance > size / 2) {
 				xPos = Math.cos(angle) * joystickHalfSize.width;
-				yPos = Math.sin(angle) * joystickHalfSize.height;
+				yPos = Math.sin(angle) * yOffset;
 			}
 		} else {
 			if (xPos > joystickHalfSize.width) xPos = joystickHalfSize.width;
 			if (xPos < -joystickHalfSize.width) xPos = -joystickHalfSize.width;
-			if (yPos > joystickHalfSize.height) yPos = joystickHalfSize.height;
-			if (yPos < -joystickHalfSize.height) yPos = -joystickHalfSize.height;
+			if (yPos > yOffset) yPos = yOffset;
+			if (yPos < -yOffset) yPos = -yOffset;
 		}
 
 		x = xPos / joystickHalfSize.width;
-		y = yPos / joystickHalfSize.height;
+		y = yPos / yOffset;
 	}
 </script>
 
@@ -70,7 +76,7 @@
 
 <div class="joystick" class:round style="background-color: {colors.background};">
 	<Label class="text-center">
-		Joystick
+		{label}
 		<div
 			class="joystick-area"
 			style="width: {size}px; height: {size}px; background-color: {colors.area};"
@@ -82,7 +88,7 @@
 				class="joystick-handle"
 				on:mousedown={() => (clicked = true)}
 				style="width: {size / 2}px; height: {size / 2}px; top: {-yPos +
-					joystickHalfSize.height}px; left: {xPos +
+					yOffset}px; left: {xPos +
 					joystickHalfSize.width}px; transform: translate(-50%, -50%); background-color: {colors.handle};"
 			/>
 		</div>

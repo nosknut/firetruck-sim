@@ -7,7 +7,7 @@
 // and this string will be used.
 String pinModes = "";
 
-int pinValues[20] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+byte pinValues[100];
 
 void syncPinsWithSim()
 {
@@ -42,7 +42,7 @@ void syncPinsWithSim()
             String buffer = pinModes;
             while (buffer.length() > 0)
             {
-                DynamicJsonDocument jsonDoc(100);
+                DynamicJsonDocument jsonDoc(50);
                 DeserializationError error = deserializeJson(jsonDoc, buffer);
 
                 // Remove the json message from the buffer
@@ -97,7 +97,7 @@ void analogWriteSim(uint8_t pin, int val)
 
     pinValues[pin] = val;
 
-    DynamicJsonDocument jsonDoc(500);
+    DynamicJsonDocument jsonDoc(50);
 
     jsonDoc["p"] = pin;
     jsonDoc["v"] = val;
@@ -115,7 +115,7 @@ void pinModeSim(uint8_t pin, uint8_t mode)
 {
     syncPinsWithSim();
 
-    DynamicJsonDocument jsonDoc(500);
+    DynamicJsonDocument jsonDoc(50);
 
     jsonDoc["m"] = (mode == OUTPUT) ? "o" : "i";
     jsonDoc["p"] = pin;

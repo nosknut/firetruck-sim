@@ -21,6 +21,7 @@
 	import { T } from '@threlte/core';
 	import { OrbitControls } from '@threlte/extras';
 	import Measured from '$lib/components/Measured.svelte';
+
 	const GAS_PEDAL_PIN = 1;
 	const DIRECTION_PICKER_PIN = 2;
 	const SPEED_SENSOR_PIN = 3;
@@ -28,16 +29,46 @@
 	const MOTOR_POWER_PIN = 5;
 	const SPEEDOMETER_PIN = 6;
 
+	const HEADLIGHTS_PICKER_PIN = 7;
+	const HEADLIGHTS_PIN = 8;
+
+	const FLASH_LEFT_PICKER_PIN = 9;
+	const FLASH_LEFT_PIN = 10;
+
+	const FLASH_RIGHT_PICKER_PIN = 11;
+	const FLASH_RIGHT_PIN = 12;
+
+	const WIPER_PICKER_PIN = 13;
+	const WIPER_PIN = 14;
+
+	const BOOM_UP_PICKER_PIN = 15;
+	const BOOM_DOWN_PICKER_PIN = 16;
+	const BOOM_ELEVATION_PIN = 18;
+
+	const BOOM_LEFT_PICKER_PIN = 19;
+	const BOOM_RIGHT_PICKER_PIN = 20;
+	const BOOM_ROTATION_PIN = 22;
+
 	// Used because the truck speed is technically a cyclical dependency
 	const truckSpeed = writable(0);
 
 	let joyStickY = 0;
+
+	let boomJoyStick = {
+		x: 0,
+		y: 0
+	};
 
 	// Only update direction if the joystick is being used
 	$: {
 		$pins[GAS_PEDAL_PIN] = Math.round(Math.abs(joyStickY) * 255);
 		$pins[DIRECTION_PICKER_PIN] = Number(joyStickY >= 0);
 	}
+
+	$: $pins[BOOM_UP_PICKER_PIN] = Number(boomJoyStick.y == 1);
+	$: $pins[BOOM_DOWN_PICKER_PIN] = Number(boomJoyStick.y == -1);
+	$: $pins[BOOM_LEFT_PICKER_PIN] = Number(boomJoyStick.x == -1);
+	$: $pins[BOOM_RIGHT_PICKER_PIN] = Number(boomJoyStick.x == 1);
 
 	// Start with direction forward
 	$pins[DIRECTION_PICKER_PIN] = 1;
@@ -59,6 +90,13 @@
 	$simPins.add(SPEED_SENSOR_PIN.toString());
 	onDestroy(() => $simPins.delete(SPEED_SENSOR_PIN.toString()));
 	$: $pins[SPEED_SENSOR_PIN] = Math.round(Math.abs($truckSpeed) * 255);
+
+	$: truck.state.wiper = Number($pins[WIPER_PIN] ?? 0) / 255;
+	$: truck.state.lights.headlights = Boolean($pins[HEADLIGHTS_PIN]);
+	$: truck.state.lights.flash.left = Boolean($pins[FLASH_LEFT_PIN]);
+	$: truck.state.lights.flash.right = Boolean($pins[FLASH_RIGHT_PIN]);
+	$: truck.state.boom.rotation = Number($pins[BOOM_ROTATION_PIN] ?? 0) / 255;
+	$: truck.state.boom.elevation = Number($pins[BOOM_ELEVATION_PIN] ?? 0) / 255;
 
 	onDestroy(
 		// In a subscription because this is a cyclical dependency
@@ -86,7 +124,17 @@
 						<SerialMonitor />
 					</Controls>
 					<Controls open label="Firetruck 1 Serial Controls">
-						<NumberToggle bind:checked={$pins[DIRECTION_PICKER_PIN]} label="Direction" />
+						<div class="flex flex-wrap gap-4">
+							<NumberToggle bind:checked={$pins[DIRECTION_PICKER_PIN]} label="Direction" />
+							<NumberToggle bind:checked={$pins[HEADLIGHTS_PICKER_PIN]} label="Headlights" />
+							<NumberToggle bind:checked={$pins[FLASH_LEFT_PICKER_PIN]} label="Flash Left" />
+							<NumberToggle bind:checked={$pins[FLASH_RIGHT_PICKER_PIN]} label="Flash Right" />
+							<NumberToggle bind:checked={$pins[WIPER_PICKER_PIN]} label="Wipers" />
+							<NumberToggle bind:checked={$pins[BOOM_UP_PICKER_PIN]} label="Boom Up" />
+							<NumberToggle bind:checked={$pins[BOOM_DOWN_PICKER_PIN]} label="Boom Down" />
+							<NumberToggle bind:checked={$pins[BOOM_LEFT_PICKER_PIN]} label="Boom Left" />
+							<NumberToggle bind:checked={$pins[BOOM_RIGHT_PICKER_PIN]} label="Boom Right" />
+						</div>
 						<div class="my-2">
 							<div class="flex justify-between">
 								Direction: <div>{directionIndicator}</div>
@@ -108,7 +156,10 @@
 						/>
 						<Slider bind:value={truck.state.turn} min={-1} max={1} label="Turn" />
 						<StopButton on:click={stopTruck} />
-						<Joystick bind:x={truck.state.turn} bind:y={joyStickY} />
+						<div class="flex">
+							<Joystick bind:x={truck.state.turn} bind:y={joyStickY} label="Drive" />
+							<Joystick bind:x={boomJoyStick.x} bind:y={boomJoyStick.y} label="Boom" />
+						</div>
 					</Controls>
 					<Controls open label="Pin Registry" topPadding={6}>
 						<PinRegistry />
@@ -124,6 +175,20 @@
 						<Controls label="Firetruck {i + 1} Controls">
 							<Slider bind:value={state.speed} min={-1} max={1} label="Speed" />
 							<Slider bind:value={state.turn} min={-1} max={1} label="Turn" />
+							<Slider
+								bind:value={state.boom.elevation}
+								min={0}
+								max={1}
+								step={0.01}
+								label="Boom Elevation"
+							/>
+							<Slider
+								bind:value={state.boom.rotation}
+								min={-1}
+								max={1}
+								step={0.01}
+								label="Boom Rotation"
+							/>
 							<StopButton on:click={stop} />
 							<Joystick bind:x={state.turn} bind:y={state.speed} />
 						</Controls>
@@ -136,14 +201,13 @@
 				<Canvas size={{ height, width }}>
 					<Road />
 					{#each truckStates as { state }}
-						<VehiclePhysics profile={{ maxSpeed: 1, maxTurnAngle: 30 }} bind:state />
 						<Firetruck bind:state />
+						<VehiclePhysics profile={{ maxSpeed: 1, maxTurnAngle: 30 }} bind:state />
 					{/each}
 					<T.PerspectiveCamera zoom={0.5} position={[-10, 10, 10]} makeDefault>
 						<OrbitControls />
 					</T.PerspectiveCamera>
 					<T.AmbientLight />
-					<T.DirectionalLight position={[10, 10, 5]} />
 				</Canvas>
 			</Measured>
 		</div>
