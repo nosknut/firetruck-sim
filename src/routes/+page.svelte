@@ -188,7 +188,7 @@
 						<Firetruck bind:state />
 						<VehiclePhysics profile={{ maxSpeed: 1, maxTurnAngle: 30 }} bind:state />
 					{/each}
-					<T.PerspectiveCamera zoom={0.5} position={[-10, 10, 10]} makeDefault>
+					<T.PerspectiveCamera zoom={0.5} position={[5, 5,-20]} makeDefault>
 						<OrbitControls />
 					</T.PerspectiveCamera>
 					<T.AmbientLight />
