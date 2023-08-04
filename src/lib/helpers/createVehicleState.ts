@@ -8,6 +8,8 @@ export function createVehicleState() {
         boom: {
             rotation: 0,
             elevation: 0,
+            elbow: 0,
+            wrist: 0,
         },
         lights: {
             headlights: false,

@@ -14,6 +14,8 @@ export type VehicleState = {
     boom: {
         rotation: number;
         elevation: number;
+        elbow: number;
+        wrist: number;
     };
     transform: Transform;
 };

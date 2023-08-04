@@ -26,12 +26,18 @@ Command: npx @threlte/gltf@1.0.0 static\models\Firetruck.gltf -t -u -m
     | 'RFlashOn'
     | 'LFlashOn'
     | 'Wiper'
+    | 'BoomElbow'
+    | 'BoomWrist'
   type GLTFResult = {
     nodes: {
       FlWheel: THREE.Mesh
       FrWheel: THREE.Mesh
       BoomSocket: THREE.Mesh
       BoomShoulder: THREE.Mesh
+      BoomElbow: THREE.Mesh
+      BoomWrist: THREE.Mesh
+      BoomWristWaterGun: THREE.Mesh
+      BoomWristWaterGunTip: THREE.Mesh
       HeadlightsOn: THREE.Mesh
       RFlashOn: THREE.Mesh
       LFlashOn: THREE.Mesh
@@ -50,10 +56,11 @@ Command: npx @threlte/gltf@1.0.0 static\models\Firetruck.gltf -t -u -m
     materials: {
       Tire: THREE.MeshStandardMaterial
       Metal: THREE.MeshStandardMaterial
+      Red: THREE.MeshStandardMaterial
+      Orange: THREE.MeshStandardMaterial
       HeadlightOn: THREE.MeshStandardMaterial
       FlashOn: THREE.MeshStandardMaterial
       Rubber: THREE.MeshStandardMaterial
-      Red: THREE.MeshStandardMaterial
       Glass: THREE.MeshStandardMaterial
       LightOff: THREE.MeshStandardMaterial
     }
@@ -105,7 +112,45 @@ Command: npx @threlte/gltf@1.0.0 static\models\Firetruck.gltf -t -u -m
             position={[0, 0.57, 0]}
             scale={[1, 0.5, 1]}
             userData={{ name: 'BoomShoulder' }}
-          />
+          >
+            <T.Mesh
+              name="BoomElbow"
+              geometry={gltf.nodes.BoomElbow.geometry}
+              material={gltf.materials.Metal}
+              position={[0, 0.6, 9.5]}
+              rotation={[0, 0, -Math.PI / 2]}
+              scale={[0.75, 0.38, 0.38]}
+              userData={{ name: 'BoomElbow' }}
+            >
+              <T.Mesh
+                name="BoomWrist"
+                geometry={gltf.nodes.BoomWrist.geometry}
+                material={gltf.materials.Metal}
+                rotation={[0, 0, Math.PI / 2]}
+                scale={2.67}
+                userData={{ name: 'BoomWrist' }}
+              >
+                <T.Mesh
+                  name="BoomWristWaterGun"
+                  geometry={gltf.nodes.BoomWristWaterGun.geometry}
+                  material={gltf.materials.Red}
+                  position={[0, 2, 3.65]}
+                  rotation={[Math.PI / 2, 0, 0]}
+                  scale={[0.2, 1, 0.2]}
+                  userData={{ name: 'BoomWristWaterGun' }}
+                >
+                  <T.Mesh
+                    name="BoomWristWaterGunTip"
+                    geometry={gltf.nodes.BoomWristWaterGunTip.geometry}
+                    material={gltf.materials.Orange}
+                    position={[0, 1, 0]}
+                    scale={[0.65, 0.13, 0.65]}
+                    userData={{ name: 'BoomWristWaterGunTip' }}
+                  />
+                </T.Mesh>
+              </T.Mesh>
+            </T.Mesh>
+          </T.Mesh>
         </T.Mesh>
         <T.Mesh
           name="HeadlightsOn"

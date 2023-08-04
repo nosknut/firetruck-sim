@@ -27,6 +27,12 @@ const int BOOM_LEFT_PICKER_PIN = 19;
 const int BOOM_RIGHT_PICKER_PIN = 20;
 const int BOOM_ROTATION_PIN = 22;
 
+const int BOOM_ELBOW_OUT_PICKER_PIN = 23;
+const int BOOM_ELBOW_IN_PICKER_PIN = 24;
+const int BOOM_ELBOW_PIN = 25;
+
+const int BOOM_WRIST_PIN = 28;
+
 unsigned long timer = 0;
 unsigned long boomTimer = 0;
 unsigned long printTimer = 0;
@@ -35,6 +41,7 @@ unsigned long wiperTimer = 0;
 
 int wiperState = 0;
 int wiperTarget = 0;
+int boomElbowState = 0;
 bool flashState = false;
 int boomRotationState = 0;
 int boomElevationState = 0;
@@ -70,6 +77,12 @@ void setup()
     pinMode(BOOM_LEFT_PICKER_PIN, INPUT);
     pinMode(BOOM_RIGHT_PICKER_PIN, INPUT);
     pinMode(BOOM_ROTATION_PIN, OUTPUT);
+
+    pinMode(BOOM_ELBOW_OUT_PICKER_PIN, INPUT);
+    pinMode(BOOM_ELBOW_IN_PICKER_PIN, INPUT);
+    pinMode(BOOM_ELBOW_PIN, OUTPUT);
+
+    pinMode(BOOM_WRIST_PIN, OUTPUT);
 }
 
 int motorPower = 0;
@@ -90,6 +103,9 @@ void loop()
 
     int boomLeft = digitalRead(BOOM_LEFT_PICKER_PIN);
     int boomRight = digitalRead(BOOM_RIGHT_PICKER_PIN);
+
+    int boomElbowOut = digitalRead(BOOM_ELBOW_OUT_PICKER_PIN);
+    int boomElbowIn = digitalRead(BOOM_ELBOW_IN_PICKER_PIN);
 
     analogWrite(DIRECTION_PIN, direction);
     digitalWrite(HEADLIGHTS_PIN, headlights);
@@ -114,8 +130,22 @@ void loop()
             boomRotationState = min(boomRotationState + 1, 255);
         }
 
+        if (boomElbowOut)
+        {
+            boomElbowState = min(boomElbowState + 1, 255);
+        }
+        else if (boomElbowIn)
+        {
+            boomElbowState = max(boomElbowState - 1, 0);
+        }
+
         analogWrite(BOOM_ELEVATION_PIN, boomElevationState);
         analogWrite(BOOM_ROTATION_PIN, boomRotationState);
+
+        analogWrite(BOOM_ELBOW_PIN, boomElbowState);
+
+        // Boom wrist is synchronized with elevation to keep it level
+        analogWrite(BOOM_WRIST_PIN, boomElevationState);
 
         boomTimer = millis();
     }

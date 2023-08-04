@@ -14,6 +14,8 @@
 	let actions: Firetruck['$$prop_def']['actions'];
 
 	$: setAnimation($actions?.Wiper, state.wiper);
+	$: setAnimation($actions?.BoomElbow, state.boom.elbow);
+	$: setAnimation($actions?.BoomWrist, state.boom.wrist);
 	$: setAnimation($actions?.HeadlightsOn, Number(state.lights.headlights));
 	$: setAnimation($actions?.RFlashOn, Number(state.lights.flash.right));
 	$: setAnimation($actions?.LFlashOn, Number(state.lights.flash.left));

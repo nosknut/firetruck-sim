@@ -49,6 +49,12 @@
 	const BOOM_RIGHT_PICKER_PIN = 20;
 	const BOOM_ROTATION_PIN = 22;
 
+	const BOOM_ELBOW_OUT_PICKER_PIN = 23;
+	const BOOM_ELBOW_IN_PICKER_PIN = 24;
+	const BOOM_ELBOW_PIN = 25;
+
+	const BOOM_WRIST_PIN = 28;
+
 	// Used because the truck speed is technically a cyclical dependency
 	const truckSpeed = writable(0);
 
@@ -97,6 +103,8 @@
 	$: truck.state.lights.flash.right = Boolean($pins[FLASH_RIGHT_PIN]);
 	$: truck.state.boom.rotation = Number($pins[BOOM_ROTATION_PIN] ?? 0) / 255;
 	$: truck.state.boom.elevation = Number($pins[BOOM_ELEVATION_PIN] ?? 0) / 255;
+	$: truck.state.boom.elbow = Number($pins[BOOM_ELBOW_PIN] ?? 0) / 255;
+	$: truck.state.boom.wrist = Number($pins[BOOM_WRIST_PIN] ?? 0) / 255;
 
 	onDestroy(
 		// In a subscription because this is a cyclical dependency
@@ -134,6 +142,8 @@
 							<NumberToggle bind:checked={$pins[BOOM_DOWN_PICKER_PIN]} label="Boom Down" />
 							<NumberToggle bind:checked={$pins[BOOM_LEFT_PICKER_PIN]} label="Boom Left" />
 							<NumberToggle bind:checked={$pins[BOOM_RIGHT_PICKER_PIN]} label="Boom Right" />
+							<NumberToggle bind:checked={$pins[BOOM_ELBOW_IN_PICKER_PIN]} label="Boom Elbow In" />
+							<NumberToggle bind:checked={$pins[BOOM_ELBOW_OUT_PICKER_PIN]} label="Boom Elbow Out" />
 						</div>
 						<div class="my-2">
 							<div class="flex justify-between">
