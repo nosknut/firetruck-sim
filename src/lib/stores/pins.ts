@@ -92,10 +92,8 @@ export function createPin(pin: number, options: { simPin?: boolean, global?: boo
 
         if ('m' in data) {
             setMode(data.m === 'i' ? 'input' : 'output');
-            // Resetting this because the controller has no idea
-            if (data.m === 'o') {
-                setValue(0);
-            } else {
+            
+            if (data.m === 'i') {
                 // Send the current sim value to the controller
                 sendValue(syncValue);
             }
