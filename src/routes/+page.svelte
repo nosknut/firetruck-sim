@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Firetruck from '$lib/components/Firetruck.svelte';
-	import Road from '$lib/components/Road.svelte';
 	import { createVehicleState } from '$lib/helpers/createVehicleState';
 	import VehiclePhysics from '$lib/components/VehiclePhysics.svelte';
 	import { serialPort } from '$lib/stores/serial';
@@ -16,7 +15,7 @@
 	import StopButton from '$lib/components/StopButton.svelte';
 	import { Canvas } from '@threlte/core';
 	import { T } from '@threlte/core';
-	import { OrbitControls } from '@threlte/extras';
+	import { OrbitControls, Suspense } from '@threlte/extras';
 	import Measured from '$lib/components/Measured.svelte';
 	import ToggleWithLabel from '$lib/components/ToggleWithLabel.svelte';
 	import {
@@ -45,6 +44,7 @@
 		boomElbowOutPickerPin,
 		speedometerPin
 	} from '$lib/stores/firetruckPins';
+	import City from '$lib/components/models/City.svelte';
 
 	let joyStickY = 0;
 
@@ -181,7 +181,9 @@
 		<div class="w-full overflow-auto bg-black">
 			<Measured let:height let:width>
 				<Canvas size={{ height, width }}>
-					<Road />
+					<Suspense>
+						<City />
+					</Suspense>
 					{#each truckStates as state}
 						<Firetruck bind:state />
 						<VehiclePhysics profile={{ maxSpeed: 1, maxTurnAngle: 30 }} bind:state />
