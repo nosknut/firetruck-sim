@@ -1,113 +1,140 @@
-import _ from "lodash";
 import { writable } from "svelte/store"
 
+import type { Writable } from "svelte/store"
 import { serialPort } from "./serial"
 import { toasts } from "./toasts";
+import type { SerialMessage } from "$lib/types/SerialMessage";
+import type { PinMode } from "$lib/types/PinMode";
+import { addSimPin } from "./simPins";
+import { onDestroy } from "svelte";
 
-type PinValueStore = {
-    [pin: number | string]: number | undefined
+export type Pin = {
+    pin: number
+    boolValue: boolean
+    numberValue: number
+    mode: PinMode
 }
 
-type PinModeStore = {
-    [pin: number | string]: 'input' | 'output' | undefined
-}
+export const pins = writable<{
+    [pin: number]: {
+        store: Writable<Pin>
+        pin: Pin
+    }
+}>({})
 
-function createPins() {
-    // Needed to detect when to write changes to the serial port
-    const pinValuesVersioningClone: PinValueStore = {}
-    const pinModesVersioningClone: PinModeStore = {}
+export function createPin(pin: number, options: { simPin?: boolean, global?: boolean } = {}) {
+    // Used to send the initial value to the controller
+    // if the mode is set to output
+    let syncValue = 0
+    let syncBoolValue = false
 
-    const pinValues = writable<PinValueStore>({})
-
-    const pinModes = writable<PinModeStore>({})
-
-    const simPins = writable<Set<string>>(new Set())
-
-    function setPinStore(pin: number | string, value: number | boolean) {
-        pinValues.update((values) => {
-            values[pin] = Number(value)
-            pinValuesVersioningClone[pin] = Number(value)
-            return values
-        })
+    const initialStore: Pin = {
+        pin,
+        boolValue: false,
+        numberValue: 0,
+        mode: undefined,
     }
 
-    async function setPin(pin: number | string, value: number | boolean, options?: { ignoreClosed?: boolean }) {
-        setPinStore(pin, value)
-        await serialPort?.send({
-            p: pin,
-            v: value,
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
-        }, options).catch(() => { })
+    const store = writable(initialStore)
+
+    if (options.simPin) {
+        addSimPin(pin, options)
     }
 
-    function setPins(newValues: PinValueStore) {
-        Object.keys(pinValuesVersioningClone).forEach((pin) => {
-            if (pinValuesVersioningClone[pin] !== newValues[pin]) {
-                setPin(pin, newValues[pin] || 0, { ignoreClosed: true }).catch((e) => {
-                    console.error(e)
-                    toasts.add(e.message)
-                })
+    function setValue(value: number) {
+        store.update((current) => {
+            syncValue = value
+            syncBoolValue = Boolean(value)
+            return {
+                ...current,
+                numberValue: value,
+                boolValue: Boolean(value),
             }
         })
     }
 
-    return {
-        pins: {
-            set: setPins,
-            subscribe: pinValues.subscribe,
-            update(cb: (currentValues: PinValueStore) => PinValueStore) {
-                pinValues.update((values) => {
-                    setPins(cb(values))
-                    return values
-                })
-            },
-            setPin,
-        },
-        simPins,
-        modes: {
-            subscribe: pinModes.subscribe,
-        },
-        sync: {
-            store: {
-                pinValue: setPinStore,
-                pinMode(pin: number | string, mode: 'input' | 'output') {
-                    pinModesVersioningClone[pin] = mode
-
-                    pinModes.update((modes) => {
-                        modes[pin] = mode
-                        return modes
-                    })
-
-                    if (pinValuesVersioningClone[pin] === undefined) {
-                        setPinStore(pin, 0)
-                    }
-                },
-            },
-            controller: {
-                pinValue(pin: number | string) {
-                    setPin(pin, pinValuesVersioningClone[pin] || 0)
-                },
-            },
-        },
+    function setMode(mode: PinMode) {
+        store.update((current) => {
+            return {
+                ...current,
+                mode,
+            }
+        })
     }
-}
 
-const { pins, simPins, modes, sync } = createPins()
-
-export { pins, simPins, modes }
-
-serialPort.onReceive((data: { p: number; v: number } | { p: number; m: 'i' | 'o' } | { print: string }) => {
-    if ('v' in data) {
-        sync.store.pinValue(data.p, data.v);
+    async function sendValue(value: number) {
+        await serialPort?.send({
+            p: pin,
+            v: value,
+        }, { ignoreClosed: true }).catch((e) => {
+            console.error(e)
+            toasts.add(e.message)
+        })
     }
-    if ('m' in data) {
-        sync.store.pinMode(data.p, data.m === 'i' ? 'input' : 'output');
-        // Resetting this because the controller has no idea
-        if (data.m === 'o') {
-            sync.store.pinValue(data.p, 0);
-        } else {
-            // Send the current sim value to the controller
-            sync.controller.pinValue(data.p);
+
+    function setStore(value: Pin) {
+        if (value.numberValue !== syncValue) {
+            setValue(value.numberValue)
+            sendValue(value.numberValue)
+        } else if (value.boolValue !== syncBoolValue) {
+            setValue(Number(value.boolValue))
+            sendValue(Number(value.boolValue))
         }
     }
-}).catch(console.error);
+
+    serialPort.onReceive((data: SerialMessage) => {
+        if (!('p' in data)) return;
+        if (pin !== data.p) return;
+
+        if ('v' in data) {
+            setValue(data.v);
+        }
+
+        if ('m' in data) {
+            setMode(data.m === 'i' ? 'input' : 'output');
+            // Resetting this because the controller has no idea
+            if (data.m === 'o') {
+                setValue(0);
+            } else {
+                // Send the current sim value to the controller
+                sendValue(syncValue);
+            }
+        }
+    }).catch(console.error);
+
+    const wrappedStore = {
+        subscribe: store.subscribe,
+        set: setStore,
+        update(cb: (currentValue: Pin) => Pin) {
+            store.update((current) => {
+                setStore(cb(current))
+                return current
+            })
+        }
+    }
+
+    pins.update((current) => {
+        current[pin] = {
+            store: wrappedStore,
+            pin: initialStore,
+        }
+        return current
+    })
+
+    const unsubscribe = store.subscribe((value) => {
+        pins.update((current) => {
+            if (current[pin]) {
+                current[pin].pin = value
+            }
+            return current
+        })
+    })
+
+    if (!options.global) {
+        onDestroy(unsubscribe)
+    }
+
+    return wrappedStore
+}
+
+export type PinStore = Writable<Pin>

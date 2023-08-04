@@ -3,7 +3,6 @@
 	import Road from '$lib/components/Road.svelte';
 	import { createVehicleState } from '$lib/helpers/createVehicleState';
 	import VehiclePhysics from '$lib/components/VehiclePhysics.svelte';
-	import { pins, simPins } from '$lib/stores/pins';
 	import { serialPort } from '$lib/stores/serial';
 	import PageLayout from '$lib/components/PageLayout.svelte';
 	import SerialConnectButton from '$lib/components/SerialConnectButton.svelte';
@@ -14,49 +13,37 @@
 	import SerialMonitor from '$lib/components/SerialMonitor.svelte';
 	import Slider from '$lib/components/Slider.svelte';
 	import StopButton from '$lib/components/StopButton.svelte';
-	import { onDestroy } from 'svelte';
-	import NumberToggle from '$lib/components/NumberToggle.svelte';
-	import { writable } from 'svelte/store';
 	import { Canvas } from '@threlte/core';
 	import { T } from '@threlte/core';
 	import { OrbitControls } from '@threlte/extras';
 	import Measured from '$lib/components/Measured.svelte';
-
-	const GAS_PEDAL_PIN = 1;
-	const DIRECTION_PICKER_PIN = 2;
-	const SPEED_SENSOR_PIN = 3;
-	const DIRECTION_PIN = 4;
-	const MOTOR_POWER_PIN = 5;
-	const SPEEDOMETER_PIN = 6;
-
-	const HEADLIGHTS_PICKER_PIN = 7;
-	const HEADLIGHTS_PIN = 8;
-
-	const FLASH_LEFT_PICKER_PIN = 9;
-	const FLASH_LEFT_PIN = 10;
-
-	const FLASH_RIGHT_PICKER_PIN = 11;
-	const FLASH_RIGHT_PIN = 12;
-
-	const WIPER_PICKER_PIN = 13;
-	const WIPER_PIN = 14;
-
-	const BOOM_UP_PICKER_PIN = 15;
-	const BOOM_DOWN_PICKER_PIN = 16;
-	const BOOM_ELEVATION_PIN = 18;
-
-	const BOOM_LEFT_PICKER_PIN = 19;
-	const BOOM_RIGHT_PICKER_PIN = 20;
-	const BOOM_ROTATION_PIN = 22;
-
-	const BOOM_ELBOW_OUT_PICKER_PIN = 23;
-	const BOOM_ELBOW_IN_PICKER_PIN = 24;
-	const BOOM_ELBOW_PIN = 25;
-
-	const BOOM_WRIST_PIN = 28;
-
-	// Used because the truck speed is technically a cyclical dependency
-	const truckSpeed = writable(0);
+	import ToggleWithLabel from '$lib/components/ToggleWithLabel.svelte';
+	import {
+		motorPowerPin,
+		directionPin,
+		gasPedalPin,
+		directionPickerPin,
+		boomUpPickerPin,
+		boomDownPickerPin,
+		boomLeftPickerPin,
+		boomRightPickerPin,
+		speedSensorPin,
+		wiperPin,
+		headlightPin,
+		flashLeftPin,
+		flashRightPin,
+		boomRotationPin,
+		boomElevationPin,
+		boomElbowPin,
+		boomWristPin,
+		headlightPickerPin,
+		flashLeftPickerPin,
+		flashRightPickerPin,
+		wiperPickerPin,
+		boomElbowInPickerPin,
+		boomElbowOutPickerPin,
+		speedometerPin
+	} from '$lib/stores/firetruckPins';
 
 	let joyStickY = 0;
 
@@ -64,20 +51,6 @@
 		x: 0,
 		y: 0
 	};
-
-	// Only update direction if the joystick is being used
-	$: {
-		$pins[GAS_PEDAL_PIN] = Math.round(Math.abs(joyStickY) * 255);
-		$pins[DIRECTION_PICKER_PIN] = Number(joyStickY >= 0);
-	}
-
-	$: $pins[BOOM_UP_PICKER_PIN] = Number(boomJoyStick.y == 1);
-	$: $pins[BOOM_DOWN_PICKER_PIN] = Number(boomJoyStick.y == -1);
-	$: $pins[BOOM_LEFT_PICKER_PIN] = Number(boomJoyStick.x == -1);
-	$: $pins[BOOM_RIGHT_PICKER_PIN] = Number(boomJoyStick.x == 1);
-
-	// Start with direction forward
-	$pins[DIRECTION_PICKER_PIN] = 1;
 
 	let truckStates = [createVehicleState(), createVehicleState(), createVehicleState()];
 
@@ -88,34 +61,36 @@
 
 	let truck = truckStates[0];
 	truck.state.transform.rotation.y = Math.PI;
-	$: truck.state.speed = $truckSpeed;
+
+	$: {
+		let direction = $directionPin.boolValue ? 1 : -1;
+		truck.state.speed = (direction * $motorPowerPin.numberValue) / 255;
+	}
 
 	$: directionIndicator =
-		$pins[DIRECTION_PIN] === undefined ? 'N/A' : $pins[DIRECTION_PIN] ? 'Forward' : 'Backward';
+		$directionPin.mode === undefined ? 'N/A' : $directionPin.boolValue ? 'Forward' : 'Backward';
 
-	$simPins.add(SPEED_SENSOR_PIN.toString());
-	onDestroy(() => $simPins.delete(SPEED_SENSOR_PIN.toString()));
-	$: $pins[SPEED_SENSOR_PIN] = Math.round(Math.abs($truckSpeed) * 255);
+	// Write to controller inputs
+	$: $gasPedalPin.numberValue = Math.round(Math.abs(joyStickY) * 255);
+	$: $directionPickerPin.boolValue = joyStickY >= 0;
+	$: $boomUpPickerPin.boolValue = boomJoyStick.y == 1;
+	$: $boomDownPickerPin.boolValue = boomJoyStick.y == -1;
+	$: $boomLeftPickerPin.boolValue = boomJoyStick.x == -1;
+	$: $boomRightPickerPin.boolValue = boomJoyStick.x == 1;
+	$: $speedSensorPin.numberValue = Math.round(Math.abs(truck.state.speed) * 255);
 
-	$: truck.state.wiper = Number($pins[WIPER_PIN] ?? 0) / 255;
-	$: truck.state.lights.headlights = Boolean($pins[HEADLIGHTS_PIN]);
-	$: truck.state.lights.flash.left = Boolean($pins[FLASH_LEFT_PIN]);
-	$: truck.state.lights.flash.right = Boolean($pins[FLASH_RIGHT_PIN]);
-	$: truck.state.boom.rotation = Number($pins[BOOM_ROTATION_PIN] ?? 0) / 255;
-	$: truck.state.boom.elevation = Number($pins[BOOM_ELEVATION_PIN] ?? 0) / 255;
-	$: truck.state.boom.elbow = Number($pins[BOOM_ELBOW_PIN] ?? 0) / 255;
-	$: truck.state.boom.wrist = Number($pins[BOOM_WRIST_PIN] ?? 0) / 255;
-
-	onDestroy(
-		// In a subscription because this is a cyclical dependency
-		pins.subscribe((pins) => {
-			let direction = pins[DIRECTION_PIN] ? 1 : -1;
-			truckSpeed.set((direction * ($pins[MOTOR_POWER_PIN] || 0)) / 255);
-		})
-	);
+	// Read from controller outputs
+	$: truck.state.wiper = $wiperPin.numberValue / 255;
+	$: truck.state.lights.headlights = $headlightPin.boolValue;
+	$: truck.state.lights.flash.left = $flashLeftPin.boolValue;
+	$: truck.state.lights.flash.right = $flashRightPin.boolValue;
+	$: truck.state.boom.rotation = $boomRotationPin.numberValue / 255;
+	$: truck.state.boom.elevation = $boomElevationPin.numberValue / 255;
+	$: truck.state.boom.elbow = $boomElbowPin.numberValue / 255;
+	$: truck.state.boom.wrist = $boomWristPin.numberValue / 255;
 
 	function stopTruck() {
-		$pins[GAS_PEDAL_PIN] = 0;
+		$gasPedalPin.numberValue = 0;
 	}
 </script>
 
@@ -133,31 +108,41 @@
 					</Controls>
 					<Controls open label="Firetruck 1 Serial Controls">
 						<div class="flex flex-wrap gap-4">
-							<NumberToggle bind:checked={$pins[DIRECTION_PICKER_PIN]} label="Direction" />
-							<NumberToggle bind:checked={$pins[HEADLIGHTS_PICKER_PIN]} label="Headlights" />
-							<NumberToggle bind:checked={$pins[FLASH_LEFT_PICKER_PIN]} label="Flash Left" />
-							<NumberToggle bind:checked={$pins[FLASH_RIGHT_PICKER_PIN]} label="Flash Right" />
-							<NumberToggle bind:checked={$pins[WIPER_PICKER_PIN]} label="Wipers" />
-							<NumberToggle bind:checked={$pins[BOOM_UP_PICKER_PIN]} label="Boom Up" />
-							<NumberToggle bind:checked={$pins[BOOM_DOWN_PICKER_PIN]} label="Boom Down" />
-							<NumberToggle bind:checked={$pins[BOOM_LEFT_PICKER_PIN]} label="Boom Left" />
-							<NumberToggle bind:checked={$pins[BOOM_RIGHT_PICKER_PIN]} label="Boom Right" />
-							<NumberToggle bind:checked={$pins[BOOM_ELBOW_IN_PICKER_PIN]} label="Boom Elbow In" />
-							<NumberToggle bind:checked={$pins[BOOM_ELBOW_OUT_PICKER_PIN]} label="Boom Elbow Out" />
+							<ToggleWithLabel bind:checked={$directionPickerPin.boolValue} label="Direction" />
+							<ToggleWithLabel bind:checked={$headlightPickerPin.boolValue} label="Headlights" />
+							<ToggleWithLabel bind:checked={$flashLeftPickerPin.boolValue} label="Flash Left" />
+							<ToggleWithLabel bind:checked={$flashRightPickerPin.boolValue} label="Flash Right" />
+							<ToggleWithLabel bind:checked={$wiperPickerPin.boolValue} label="Wipers" />
+							<ToggleWithLabel bind:checked={$boomUpPickerPin.boolValue} label="Boom Up" />
+							<ToggleWithLabel bind:checked={$boomDownPickerPin.boolValue} label="Boom Down" />
+							<ToggleWithLabel bind:checked={$boomLeftPickerPin.boolValue} label="Boom Left" />
+							<ToggleWithLabel bind:checked={$boomRightPickerPin.boolValue} label="Boom Right" />
+							<ToggleWithLabel
+								bind:checked={$boomElbowInPickerPin.boolValue}
+								label="Boom Elbow In"
+							/>
+							<ToggleWithLabel
+								bind:checked={$boomElbowOutPickerPin.boolValue}
+								label="Boom Elbow Out"
+							/>
 						</div>
 						<div class="my-2">
 							<div class="flex justify-between">
 								Direction: <div>{directionIndicator}</div>
 							</div>
 							<div class="flex justify-between">
-								Speedometer: <div>{$pins[SPEEDOMETER_PIN] ?? 'N/A'}</div>
+								Speedometer: <div>
+									{$speedometerPin.mode === undefined ? 'N/A' : $speedometerPin.numberValue}
+								</div>
 							</div>
 							<div class="flex justify-between">
-								Power: <div>{$pins[MOTOR_POWER_PIN] ?? 'N/A'}</div>
+								Power: <div>
+									{$motorPowerPin.mode === undefined ? 'N/A' : $motorPowerPin.numberValue}
+								</div>
 							</div>
 						</div>
 						<Slider
-							bind:value={$pins[GAS_PEDAL_PIN]}
+							bind:value={$gasPedalPin.numberValue}
 							min={0}
 							max={255}
 							step={1}

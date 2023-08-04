@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { serialPort } from '$lib/stores/serial';
-	import { modes, pins, simPins } from '$lib/stores/pins';
 	import { Input, Toggle } from 'flowbite-svelte';
 	import {
 		Table,
@@ -11,21 +10,23 @@
 		TableHeadCell
 	} from 'flowbite-svelte';
 	import { onEnter } from '$lib/helpers/onEnter';
+	import { pins, type Pin, type PinStore } from '$lib/stores/pins';
+	import { simPins } from '$lib/stores/simPins';
 
 	let valueInputs: { [pin: string]: number } = {};
 
-	function setPin(pin: string) {
-		const value = Number(valueInputs[pin]);
+	function setPin(pin: Pin, store: PinStore) {
+		const value = Number(valueInputs[pin.pin]);
 		if (!isNaN(value)) {
-			pins.setPin(pin, value);
+			store.set({ ...pin, numberValue: value });
 		}
-		delete valueInputs[pin];
+		delete valueInputs[pin.pin];
 		valueInputs = valueInputs;
 	}
 </script>
 
 {#if $serialPort.isOpen}
-	{#if Object.keys($modes).length}
+	{#if Object.values($pins).filter(({ pin: { mode } }) => mode !== undefined).length}
 		<Table shadow color="blue">
 			<TableHead theadClass="text-xs uppercase text-center">
 				<TableHeadCell>Pin</TableHeadCell>
@@ -33,33 +34,35 @@
 				<TableHeadCell>Toggle</TableHeadCell>
 			</TableHead>
 			<TableBody tableBodyClass="divide-y">
-				{#each Object.keys($modes) as pin (pin)}
-					<TableBodyRow color={$pins[pin] ? 'green' : 'blue'}>
-						<TableBodyCell tdClass="px-6 py-1 whitespace-nowrap font-medium">{pin}</TableBodyCell>
+				{#each Object.values($pins) as { store, pin } (pin.pin)}
+					<TableBodyRow color={pin.boolValue ? 'green' : 'blue'}>
+						<TableBodyCell tdClass="px-6 py-1 whitespace-nowrap font-medium"
+							>{pin.pin}</TableBodyCell
+						>
 						<TableBodyCell tdClass="px-6 py-1 whitespace-nowrap font-medium">
 							<div class="flex justify-center">
-								{#if $modes[pin] === 'input'}
+								{#if pin.mode === 'input'}
 									<Input
 										size="sm"
-										placeholder={$pins[pin]}
-										bind:value={valueInputs[pin]}
+										placeholder={pin.numberValue}
+										bind:value={valueInputs[pin.pin]}
 										defaultClass="w-10 h-5 text-center"
-										on:keydown={onEnter(() => setPin(pin))}
+										on:keydown={onEnter(() => setPin(pin, store))}
 									/>
 								{:else}
-									{$pins[pin]}
+									{pin.numberValue}
 								{/if}
 							</div>
 						</TableBodyCell>
 						<TableBodyCell tdClass="px-6 py-1 whitespace-nowrap font-medium">
 							<div class="flex justify-center">
-								{#if $simPins.has(pin)}
+								{#if $simPins.has(pin.pin)}
 									Sim
-								{:else if $modes[pin] === 'input'}
+								{:else if pin.mode === 'input'}
 									<Toggle
 										size="small"
-										checked={!!$pins[pin]}
-										on:change={() => pins.setPin(pin, !$pins[pin])}
+										checked={pin.boolValue}
+										on:change={() => store.set({ ...pin, boolValue: !pin.boolValue })}
 									/>
 								{:else}
 									Output
