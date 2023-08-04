@@ -178,7 +178,7 @@
 				{/each}
 			</ControlsPanel>
 		</div>
-		<div class="w-full overflow-auto bg-black">
+		<div class="w-full overflow-auto bg-gray-300 dark:bg-gray-600">
 			<Measured let:height let:width>
 				<Canvas size={{ height, width }}>
 					<Suspense>
