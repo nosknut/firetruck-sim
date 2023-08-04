@@ -6,6 +6,7 @@
 	import { serialPort } from '$lib/stores/serial';
 	import PageLayout from '$lib/components/PageLayout.svelte';
 	import SerialConnectButton from '$lib/components/SerialConnectButton.svelte';
+	import FiretruckControls from '$lib/components/FiretruckControls.svelte';
 	import ControlsPanel from '$lib/components/ControlsPanel.svelte';
 	import Controls from '$lib/components/Controls.svelte';
 	import Joystick from '$lib/components/Joystick.svelte';
@@ -52,19 +53,22 @@
 		y: 0
 	};
 
-	let truckStates = [createVehicleState(), createVehicleState(), createVehicleState()];
+	let truck = createVehicleState();
+	let truckStates = [truck, createVehicleState(), createVehicleState()];
 
 	truckStates.forEach((state, i) => {
-		state.state.transform.position.x = i * 5 - 5;
-		state.state.transform.position.z = i * 7 - 5;
+		state.update((s) => {
+			s.transform.position.x = i * 5 - 5;
+			s.transform.position.z = i * 7 - 5;
+			return s;
+		});
 	});
 
-	let truck = truckStates[0];
-	truck.state.transform.rotation.y = Math.PI;
+	$truck.transform.rotation.y = Math.PI;
 
 	$: {
 		let direction = $directionPin.boolValue ? 1 : -1;
-		truck.state.speed = (direction * $motorPowerPin.numberValue) / 255;
+		$truck.speed = (direction * $motorPowerPin.numberValue) / 255;
 	}
 
 	$: directionIndicator =
@@ -77,17 +81,17 @@
 	$: $boomDownPickerPin.boolValue = boomJoyStick.y == -1;
 	$: $boomLeftPickerPin.boolValue = boomJoyStick.x == -1;
 	$: $boomRightPickerPin.boolValue = boomJoyStick.x == 1;
-	$: $speedSensorPin.numberValue = Math.round(Math.abs(truck.state.speed) * 255);
+	$: $speedSensorPin.numberValue = Math.round(Math.abs($truck.speed) * 255);
 
 	// Read from controller outputs
-	$: truck.state.wiper = $wiperPin.numberValue / 255;
-	$: truck.state.lights.headlights = $headlightPin.boolValue;
-	$: truck.state.lights.flash.left = $flashLeftPin.boolValue;
-	$: truck.state.lights.flash.right = $flashRightPin.boolValue;
-	$: truck.state.boom.rotation = $boomRotationPin.numberValue / 255;
-	$: truck.state.boom.elevation = $boomElevationPin.numberValue / 255;
-	$: truck.state.boom.elbow = $boomElbowPin.numberValue / 255;
-	$: truck.state.boom.wrist = $boomWristPin.numberValue / 255;
+	$: $truck.wiper = $wiperPin.numberValue / 255;
+	$: $truck.lights.headlights = $headlightPin.boolValue;
+	$: $truck.lights.flash.left = $flashLeftPin.boolValue;
+	$: $truck.lights.flash.right = $flashRightPin.boolValue;
+	$: $truck.boom.rotation = $boomRotationPin.numberValue / 255;
+	$: $truck.boom.elevation = $boomElevationPin.numberValue / 255;
+	$: $truck.boom.elbow = $boomElbowPin.numberValue / 255;
+	$: $truck.boom.wrist = $boomWristPin.numberValue / 255;
 
 	function stopTruck() {
 		$gasPedalPin.numberValue = 0;
@@ -149,10 +153,10 @@
 							numDigits={0}
 							label="Gas Pedal"
 						/>
-						<Slider bind:value={truck.state.turn} min={-1} max={1} label="Turn" />
+						<Slider bind:value={$truck.turn} min={-1} max={1} label="Turn" />
 						<StopButton on:click={stopTruck} />
 						<div class="flex">
-							<Joystick bind:x={truck.state.turn} bind:y={joyStickY} label="Drive" />
+							<Joystick bind:x={$truck.turn} bind:y={joyStickY} label="Drive" />
 							<Joystick bind:x={boomJoyStick.x} bind:y={boomJoyStick.y} label="Boom" />
 						</div>
 					</Controls>
@@ -165,27 +169,10 @@
 						<SerialConnectButton large />
 					</Controls>
 				{/if}
-				{#each truckStates as { state, stop }, i}
+				{#each truckStates as state, i}
 					{#if i > 0}
 						<Controls label="Firetruck {i + 1} Controls">
-							<Slider bind:value={state.speed} min={-1} max={1} label="Speed" />
-							<Slider bind:value={state.turn} min={-1} max={1} label="Turn" />
-							<Slider
-								bind:value={state.boom.elevation}
-								min={0}
-								max={1}
-								step={0.01}
-								label="Boom Elevation"
-							/>
-							<Slider
-								bind:value={state.boom.rotation}
-								min={-1}
-								max={1}
-								step={0.01}
-								label="Boom Rotation"
-							/>
-							<StopButton on:click={stop} />
-							<Joystick bind:x={state.turn} bind:y={state.speed} />
+							<FiretruckControls bind:state />
 						</Controls>
 					{/if}
 				{/each}
@@ -195,7 +182,7 @@
 			<Measured let:height let:width>
 				<Canvas size={{ height, width }}>
 					<Road />
-					{#each truckStates as { state }}
+					{#each truckStates as state}
 						<Firetruck bind:state />
 						<VehiclePhysics profile={{ maxSpeed: 1, maxTurnAngle: 30 }} bind:state />
 					{/each}
