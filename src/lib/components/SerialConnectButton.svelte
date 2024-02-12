@@ -3,7 +3,7 @@
 	import { parseIntOrDefault } from '$lib/helpers/parseIntOrDefault';
 	import { serialPort } from '$lib/stores/serial';
 	import { toasts } from '$lib/stores/toasts';
-	import { Button, Modal, Label, Input, Checkbox, Spinner } from 'flowbite-svelte';
+	import { Button, Modal, Label, Input, Checkbox, Spinner, A } from 'flowbite-svelte';
 
 	export let large = false;
 
@@ -68,7 +68,12 @@
 	<div class="flex flex-col space-y-6">
 		<h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Connect to Controller</h3>
 
-		Connect to a controller via serial port or WebSocket.
+		<p>Connect to a controller via serial port or WebSocket.</p>
+		<p>
+			NB! Remember to import <A href="/FiretruckSim.h" target="_blank" download="FiretruckSim.h">this</A> file into
+			your .ino file and install
+			<A href="https://www.arduino.cc/reference/en/libraries/arduinojson/" target="_blank">ArduinoJson</A>.
+		</p>
 
 		<Label class="space-y-2">
 			<span>Baud Rate</span>
