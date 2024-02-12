@@ -1,6 +1,7 @@
 # Firetruck Sim
 
-[Live Website](https://firetruck-sim.vercel.app/)
+- [Live Website](https://firetruck-sim.vercel.app/)
+- [Example Project](arduino)
 
 # ThreeJs
 
